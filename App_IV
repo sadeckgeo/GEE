@@ -1,0 +1,85 @@
+//Creando função
+var app = function (image)
+{
+var ndvi = image.normalizedDifference(['B5', 'B4']);
+image = image.addBands(ndvi.rename('ndvi'));
+var evi = image.expression(
+    '2.5 * (nir - red) / (nir + 6 * red - 7.5 * blue + 1)',
+    {
+        red: image.select('B4'),    // 620-670nm, RED
+        nir: image.select('B5'),    // 841-876nm, NIR
+        blue: image.select('B2')    // 459-479nm, BLUE
+    });
+image = image.addBands(evi.rename('evi'));
+var SAVI = image.expression(
+    '1.5 * (nir - red) / (nir + red + 0.5 )',
+    {
+      red: image.select('B4'),    
+      nir: image.select('B5'),    
+    });
+  image  = image.addBands(SAVI.rename('SAVI'));
+return  image;
+}
+var OLI = ee.ImageCollection ('LANDSAT/LC08/C01/T1_RT_TOA')
+    .filterDate('2015-01-01', '2017-09-11')
+    .map(app);
+
+//Dando cor
+var palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
+               '74A901', '66A000', '529400', '3E8601', '207401', '056201',
+               '004C00', '023B01', '012E01', '011D01', '011301'];
+
+//Gráficos
+var lon = ui.Label();
+var lat = ui.Label();
+var chartAtual = null;
+Map.onClick(function(coords) {
+  // Update the lon/lat panel with values from the click event.
+  lon.setValue('lon: ' + coords.lon.toFixed(2)),
+  lat.setValue('lat: ' + coords.lat.toFixed(2));
+
+
+
+  // Add a red dot for the point clicked on.
+  var point = ee.Geometry.Point(coords.lon, coords.lat);
+  var chart  = ui.Chart.image.series(OLI.select('ndvi','evi','SAVI'), point);
+  chart.setOptions({
+    title: 'NDVI Over Time',
+    vAxis: {title: 'NDVI'},
+    hAxis: {title: 'date', format: 'MM-yy', gridlines: {count: 7}},
+  });
+  
+  // Add the chart to the map.
+  chart.style().set({
+    position: 'bottom-right',
+    width: '500px',
+    height: '300px'
+  });
+  
+//Refresh do grafico
+  var tamanho = Map.widgets().length()
+  if(tamanho > 0){
+    Map.remove(Map.widgets().get(0));
+  }
+  Map.add(chart);
+  
+  
+});
+
+
+//Mostrar no Mapa
+Map.addLayer(OLI.median(), {bands:'B6,B5,B4'});
+Map.addLayer(OLI.median(), {min: 0, max: 1,bands:['ndvi'] ,palette: palette}, 'NDVI');
+Map.addLayer(OLI.median(), {min: 0, max: 1,bands:['evi'] ,palette: palette}, 'EVI');
+Map.addLayer(OLI.median(), {min: 0, max: 1,bands:['SAVI'] ,palette: palette}, 'SAVI');
+
+
+Export.image.toDrive({
+  image:OLI.median().select('ndvi'),
+  description:'NDVI',
+  region: geometry,
+  scale: 30,
+  crs: 'EPSG:4326',
+  folder: 'GEE',
+  maxPixels: 1000000000000
+});
