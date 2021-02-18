@@ -1,0 +1,46 @@
+var nbr = function (image)
+{
+var nbr2 = image.expression(
+    '(nir - mir) / (nir + mir)',
+    {
+        nir: image.select('B8'),    
+        mir: image.select('B12')    
+    });
+image  = image.addBands(nbr2.rename('NBR'));
+return  image;
+}
+
+var box = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-74.4903439407478, 6.324263655306526],
+          [-74.4903439407478, -34.15435424467725],
+          [-31.59971894074781, -34.15435424467725],
+          [-31.59971894074781, 6.324263655306526]]], null, false);
+var ano = 2020
+var mes = 9
+
+var s2 = ee.ImageCollection("COPERNICUS/S2_SR")
+    .filterDate(ano+'-0'+mes+'-01', ano+'-0'+mes+'-30')
+    .filterMetadata('CLOUD_COVERAGE_ASSESSMENT', 'less_than', 20)
+    .filterBounds(box)
+    .map(nbr);
+
+
+var VisParam = {"opacity":1,"bands":["B12","B8A","B3"],"min":357.06,"max":15239.94,"gamma":1};
+
+var vizParamsL = {
+  bands: ['B12'],
+  min: 9528,
+  max: 15513
+};
+
+Map.addLayer(s2, VisParam,'RGB')
+Map.addLayer(s2, vizParamsL,'limiar')
+Map.addLayer(s2.median (),{min: 0, max: 1,bands:['NBR']}, 'NBR');
