@@ -1,0 +1,98 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = 
+    /* color: #98ff00 */
+    /* shown: false */
+    ee.Geometry.Point([-48.227394409816284, -1.9981437971276756]),
+    imageCollection = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
+    veg_em = 
+    /* color: #13ff0a */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      },
+      {
+        "type": "rectangle"
+      },
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.MultiPolygon(
+        [[[[-48.81014952461393, -2.55210147998217],
+           [-48.81014952461393, -2.5540736262743513],
+           [-48.807188365861485, -2.5540736262743513],
+           [-48.807188365861485, -2.55210147998217]]],
+         [[[-48.732463753614695, -2.5517301624032847],
+           [-48.732463753614695, -2.5525876179325464],
+           [-48.73160544672993, -2.5525876179325464],
+           [-48.73160544672993, -2.5517301624032847]]],
+         [[[-48.663541303444525, -2.5491572133059424],
+           [-48.663541303444525, -2.554473439006298],
+           [-48.65650318698945, -2.554473439006298],
+           [-48.65650318698945, -2.5491572133059424]]]], null, false),
+    agua_em = 
+    /* color: #00beff */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      },
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.MultiPolygon(
+        [[[[-47.76177041287517, -2.5474419577838048],
+           [-47.76177041287517, -2.549542729818273],
+           [-47.759495899630544, -2.549542729818273],
+           [-47.759495899630544, -2.5474419577838048]]],
+         [[[-47.778464481783864, -2.5467988636186383],
+           [-47.778464481783864, -2.5496284755427694],
+           [-47.77507416958904, -2.5496284755427694],
+           [-47.77507416958904, -2.5467988636186383]]]], null, false),
+    solo_em = 
+    /* color: #ff0000 */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      },
+      {
+        "type": "rectangle"
+      },
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.MultiPolygon(
+        [[[[-47.83104948964456, -2.4440108788743085],
+           [-47.83104948964456, -2.4451471005320378],
+           [-47.8286247726951, -2.4451471005320378],
+           [-47.8286247726951, -2.4440108788743085]]],
+         [[[-47.712088472765195, -3.3000959906452847],
+           [-47.712088472765195, -3.305837093981218],
+           [-47.705136186998594, -3.305837093981218],
+           [-47.705136186998594, -3.3000959906452847]]],
+         [[[-48.956542029842645, -3.5667567419287582],
+           [-48.956542029842645, -3.569497999719431],
+           [-48.95345212505749, -3.569497999719431],
+           [-48.95345212505749, -3.5667567419287582]]]], null, false),
+    imageVisParam = {"opacity":1,"bands":["B6","B5","B4"],"min":147,"max":5438,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+/*
+var l8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR")
+    .filterBounds(geometry)
+    .filterMetadata('CLOUD_COVER', 'less_than', 10)
+    .filterDate('2020-07-01', '2020-09-30');
+*/
+
+var l8img = ee.Image('LANDSAT/LC08/C01/T1_SR/LC08_223062_20200714').select('B4','B5', 'B6')
+
+var veg = l8img.reduceRegion(ee.Reducer.mean(), veg_em, 30).values();
+var agua = l8img.reduceRegion(ee.Reducer.mean(), agua_em, 30).values();
+var solo = l8img.reduceRegion(ee.Reducer.mean(), solo_em, 30).values();
+
+  
+var unmixed = l8img.unmix([solo, veg, agua]);
+
+
+Map.addLayer(l8img,imageVisParam, 'L8')
+Map.addLayer(unmixed, {}, 'MLME')
