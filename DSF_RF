@@ -1,0 +1,41 @@
+var pol = ee.FeatureCollection("users/sadeckgeo/Arenizacao");
+var year = 2017
+var dsf_rf = ee.Image('projects/mapbiomas-workspace/public/collection5/mapbiomas_collection50_deforestation_regeneration_v1')
+    .select('classification_'+ String(year))
+    .clip(pol).aside(print)
+
+
+// Get the list of values from the mosaic image
+var freqHist = dsf_rf.select("classification_2017")
+        .reduceRegions({reducer: ee.Reducer.frequencyHistogram(), collection: pol, scale: 30});
+// rewrite the distionary
+var values = ee.List(freqHist.map(function(feat){
+  feat = ee.Feature(feat);
+  var vals = ee.Dictionary(feat.get('histogram')).keys();
+  return ee.Feature(null, {vals: vals});
+}).aggregate_array('vals')).flatten().distinct();
+print(values)
+
+
+
+var onlyAreal = dsf_rf.updateMask(
+  dsf_rf.gte(200).and(dsf_rf.lt(300)).or(dsf_rf.gte(700).and(dsf_rf.lt(800)))
+)
+
+var palette = [
+                "#212121", // [0] Outros
+                "#fffbc2", // [1] Antrópico
+                "#09611f", // [2] Vegetação primária
+                "#4ea376", // [3] Vegetação secundária
+                "#e31a1c", // [4] Antropismo em vegetação primária
+                "#94fc03", // [5] Recuperação para veg secundaria
+                "#ffa500", // [6] Antropismo em vegetação secundária
+                "#212121", // [7] Não se aplica  
+            ]
+Map.addLayer(dsf_rf,{max:8, palette:palette},'DSF-RF')
+Map.addLayer(onlyAreal,{palette:["#16fff4"]},'areais')
+
+
+
+// Map.addLayer(selectedDSF_rf,{max:8, palette:palette},'DSF-RF2')
+// Map.centerObject(pol)

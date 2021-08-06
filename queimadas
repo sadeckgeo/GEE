@@ -1,0 +1,53 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageVisParam = {"opacity":1,"bands":["NBR"],"palette":["ff0000","ff6b02","fbff00"]},
+    car_mt = ee.FeatureCollection("users/sadeckgeo/CAR_MT"),
+    car_melgaco = ee.FeatureCollection("users/sadeckgeo/CAR_B_melgaco"),
+    S2 = ee.ImageCollection("COPERNICUS/S2_SR"),
+    imageVisParam2 = {"opacity":1,"bands":["B12","B8A","B3"],"min":779,"max":5755,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var nbr = function (image)
+{
+var nbr2 = image.expression(
+    '(nir - mir) / (nir + mir)',
+    {
+        nir: image.select('B5'),    
+        mir: image.select('B7')    
+    });
+image  = image.addBands(nbr2.rename('NBR'));
+return  image;
+}
+var img = ee.ImageCollection('LANDSAT/LC08/C01/T1_RT_TOA')
+    .filterDate('2021-07-01', '2021-07-30')
+    .filterMetadata('CLOUD_COVER', 'less_than', 6)
+    .map(nbr);
+
+S2 = S2.filterDate('2021-06-01', '2021-07-30')
+    .filterMetadata('CLOUD_COVERAGE_ASSESSMENT', 'less_than', 10)
+
+var vizParams = {
+  bands: ['B7'],
+  min: 0.44,
+  max: 1.40,
+};
+
+var vizParams2 = {
+  bands: ['B12'],
+  min: 10000,
+  max: 15000,
+};
+
+car_mt = ee.FeatureCollection(car_mt).style({color: 'red', fillColor: '00000000'})
+car_melgaco = ee.FeatureCollection(car_melgaco).style({color: 'red', fillColor: '00000000'})
+
+var assetAreas = ee.FeatureCollection("projects/mapbiomas-workspace/AUXILIAR/areas-protegidas").style({color: 'black', fillColor: '00000000'})
+
+Map.addLayer(S2, vizParams2)
+Map.addLayer(img, vizParams);
+Map.addLayer(img, {bands:'B7,B6,B2'}, 'OLI');
+Map.addLayer(S2, imageVisParam2, 'S2');
+Map.addLayer(img.median (),{min: 0, max: 1,bands:['NBR']}, 'NBR');
+Map.addLayer(car_mt, {}, 'CAR')
+Map.addLayer(car_melgaco, {}, 'CAR')
+Map.addLayer(assetAreas,{},'APs')
+//ver https://www.youtube.com/watch?v=z8wGkF1LwY0
+// ver http://www.dsr.inpe.br/sbsr2015/files/p0104.pdf

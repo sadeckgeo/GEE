@@ -1,0 +1,62 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var testrectangle = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-90.14961265142222, 44.8126952828127],
+          [-89.85269247769583, 44.813060353076935],
+          [-89.85560908582056, 44.960233326305634],
+          [-90.14737392129712, 44.95977008067401]]]),
+    testrectangle2 = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-124.8651123046875, 46.878968335076856],
+          [-122.552490234375, 46.53619267489863],
+          [-121.9097900390625, 48.056053763981254],
+          [-124.29931640625, 48.418264494187454]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var imageOriginal = ee.Image('LANDSAT/LM5/LM50470271985226AAA03').select(["B."])
+
+var maxObjectSize = 255;
+// The RegionGrow algorithm has these arguments:
+// threshold - The maximum distance for inclusion in the current cluster.
+// useCosine - Whether to use cosine distance instead of euclidean distance
+//     when computing the spectral distance.
+// secondPass - Apply a refinement pass to the clustering results .
+var imageClustered = ee.apply("Test.Clustering.RegionGrow", 
+  {  "image": imageOriginal
+   , "useCosine": true
+   , "threshold": 0.05
+   , "maxObjectSize": maxObjectSize
+, });
+var imageConsistent = ee.apply("Test.Clustering.SpatialConsistency", {
+   "image": imageClustered
+   , "maxObjectSize": maxObjectSize
+});
+Map.addLayer(imageOriginal, {}, "Original");
+
+var clusterImage = imageConsistent.select('clusters')
+Map.addLayer(clusterImage.randomVisualizer(), {}, "Consistent");
+
+var cleaned = clusterImage.reduceNeighborhood({
+  reducer: ee.Reducer.mode(),
+  kernel: ee.Kernel.circle(1, "pixels")
+})
+Map.addLayer(cleaned.randomVisualizer(), {}, "Cleaned",false);
+
+   // Uncomment this line to see the per-tile clustering output
+   // select bands, add cluster values, for mapping back to the values.
+var newImageforGrouping = clusterImage.addBands(imageOriginal);
+
+var means = newImageforGrouping.reduceToVectors({
+  reducer: ee.Reducer.mean(),
+  geometry: testrectangle2, //region.geometry(),
+  scale: 30,
+//  maxPixels: 1e8,
+  tileScale: 16,
+  maxPixels: 1e12
+});
+print(means)
+Export.table.toDrive(means)
+
+//var theimage = means.reduceToImage(['R', 'G', 'B', 'N'], ee.Reducer.first().forEachBand(imageOriginal))
+var theimage = means.reduceToImage(['B1','B2','B3','B4'], ee.Reducer.first().forEachBand(imageOriginal))
+print(theimage)
+
+Map.addLayer(theimage,{},"repainted image")
+

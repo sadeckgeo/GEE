@@ -1,0 +1,22 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var mefc = ee.FeatureCollection("users/sadeckgeo/Municipios_EFC");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var s2 = ee.ImageCollection("COPERNICUS/S2")
+    .filterBounds(mefc)
+    .filterMetadata('CLOUD_COVERAGE_ASSESSMENT', 'less_than', 10)
+    .median()
+    .select('B4', 'B3', 'B2')
+    .clip(mefc);
+    
+Export.image.toDrive({
+  image:s2,
+  folder:'ITV',
+  region:mefc,
+  scale:10,
+  maxPixels:1e12,
+})
+
+
+Map.addLayer(s2);
+Map.centerObject(mefc)
+

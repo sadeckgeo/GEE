@@ -1,0 +1,21 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var MPEG = ee.FeatureCollection("users/sadeckgeo/MPEG/limite-area-estudo"),
+    l8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
+    imageVisParam = {"opacity":1,"bands":["B7","B5","B2"],"min":19,"max":6938,"gamma":1},
+    l7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR"),
+    l5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var ano_inicio = '1999-01-01';
+var ano_fim = '2019-12-30';
+
+var landsat8 = l8;
+var landsat7 = l7;
+var landsat5 = l5;
+
+var img = l5
+    .filterBounds(MPEG)
+    .filterDate(ano_inicio, ano_fim)
+    .filterMetadata('CLOUD_COVER', 'less_than', 10)
+
+Map.addLayer(img,imageVisParam,'Landsat5')
+Map.centerObject(MPEG)

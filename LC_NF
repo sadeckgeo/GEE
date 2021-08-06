@@ -1,0 +1,1036 @@
+var geometry = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-62.193603515625, 3.5792127858606433],
+          [-66.64220625656844, 3.6825931956239963],
+          [-68.46815502577795, 2.9008677104325007],
+          [-68.09544664818418, -0.998955854973203],
+          [-66.09949949817866, -1.000705291959465],
+          [-62.841796875, -1.5598658653430082],
+          [-58.87174942335196, -6.051120991090565],
+          [-47.39501953125, -5.725311447610143],
+          [-53.077732158815934, 3.5087158017908826],
+          [-60.611572265625, 5.648785679847314]]]),
+    Agua = /* color: #98ff00 */ee.Geometry({
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -61.13290786701555,
+                1.7934397097064039
+              ],
+              [
+                -61.13565444885472,
+                1.7848608257964804
+              ],
+              [
+                -61.13771438523952,
+                1.7584376126690004
+              ],
+              [
+                -61.14183425800775,
+                1.7436816291882749
+              ],
+              [
+                -61.13908767616414,
+                1.7443679565736065
+              ],
+              [
+                -61.131534576095476,
+                1.7628987010291857
+              ],
+              [
+                -61.128101348799476,
+                1.7968712520191474
+              ],
+              [
+                -61.12496854970743,
+                1.8079379054386144
+              ],
+              [
+                -61.12089157148489,
+                1.8178035200433962
+              ],
+              [
+                -61.12466812150865,
+                1.8178035200419735
+              ],
+              [
+                -61.12754346653446,
+                1.8085384280204462
+              ],
+              [
+                -61.13153457609667,
+                1.7996164812267483
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.996437072753906,
+                2.880465402642033
+              ],
+              [
+                -60.99180221557617,
+                2.881579791288961
+              ],
+              [
+                -60.988712310791016,
+                2.882694178844882
+              ],
+              [
+                -60.988712310791016,
+                2.883980009283936
+              ],
+              [
+                -60.995750427246094,
+                2.881494069124067
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -61.002187728881836,
+                2.879865346765024
+              ],
+              [
+                -61.00038528442383,
+                2.8812369025906963
+              ],
+              [
+                -60.99738121032715,
+                2.8809797359992353
+              ],
+              [
+                -61.000213623046875,
+                2.882522734676526
+              ],
+              [
+                -61.003475189208984,
+                2.8794367352307426
+              ],
+              [
+                -61.00407600402832,
+                2.8781508996603735
+              ],
+              [
+                -61.00253105163574,
+                2.8787509564404554
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.98905563354492,
+                2.891437797142757
+              ],
+              [
+                -60.989227294921875,
+                2.8871517181501436
+              ],
+              [
+                -60.98939895629883,
+                2.884922950682039
+              ],
+              [
+                -60.986738204956055,
+                2.8834656772827314
+              ],
+              [
+                -60.98759651184082,
+                2.886894552896132
+              ],
+              [
+                -60.98776817321777,
+                2.8926378963597394
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.75971603393555,
+                2.6584236968665134
+              ],
+              [
+                -60.752506256103516,
+                2.663053557294665
+              ],
+              [
+                -60.75542449951172,
+                2.667168974178795
+              ],
+              [
+                -60.758514404296875,
+                2.663053557294665
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.7408332824707,
+                2.690317936962878
+              ],
+              [
+                -60.735511779785156,
+                2.6898035203282578
+              ],
+              [
+                -60.73019027709961,
+                2.691175297538321
+              ],
+              [
+                -60.732421875,
+                2.6922041294328105
+              ],
+              [
+                -60.73911666870117,
+                2.6922041294328105
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        }
+      ],
+      "coordinates": []
+    }),
+    Outros = /* color: #00ffff */ee.Geometry.MultiPolygon(
+        [[[[-61.046648025512695, 1.7245930431979002],
+           [-61.04707717895508, 1.7215903274757718],
+           [-61.044931411743164, 1.7191881514921759],
+           [-61.04372978210449, 1.7209897837634924],
+           [-61.042184829711914, 1.7200460718335513],
+           [-61.0429573059082, 1.71678597248573],
+           [-61.03986740112305, 1.718330230765241],
+           [-61.035146713256836, 1.717815478144089],
+           [-61.03385925292969, 1.7191023594368318],
+           [-61.03677749633789, 1.7207324078289026],
+           [-61.0374641418457, 1.7191881514921759],
+           [-61.04269981384277, 1.7209897837634924],
+           [-61.04450225830078, 1.7218477032945387],
+           [-61.04372978210449, 1.7237351249032629],
+           [-61.04570388793945, 1.7243356677501132]]],
+         [[[-61.04278564453125, 1.7298263364124142],
+           [-61.0429573059082, 1.7283678790967902],
+           [-61.04124069213867, 1.7275957541820073],
+           [-61.040897369384766, 1.7290542120908048],
+           [-61.04184150695801, 1.7293973784947616]]]]),
+    SoloHerbaceasArbustos = /* color: #d63000 */ee.Geometry.MultiPolygon(
+        [[[[-61.033902168273926, 2.736700273142359],
+           [-61.03501796722412, 2.735028482410432],
+           [-61.0345458984375, 2.7342568859019605],
+           [-61.032700538635254, 2.7341282864356353],
+           [-61.03231430053711, 2.7362287426591148],
+           [-61.03330135345459, 2.7370860706724844]]],
+         [[[-61.01982593536377, 2.7368717387266366],
+           [-61.01832389831543, 2.735800078422508],
+           [-61.0175085067749, 2.736143009824058],
+           [-61.019182205200195, 2.7373432689569124],
+           [-61.01986885070801, 2.7373861353322733]]],
+         [[[-61.0305118560791, 2.739572318442409],
+           [-61.02888107299805, 2.740729707884951],
+           [-61.029052734375, 2.741672765121769],
+           [-61.030168533325195, 2.7418442299940478],
+           [-61.03076934814453, 2.740729707884951],
+           [-61.03179931640625, 2.7396151847380015],
+           [-61.03209972381592, 2.738629259550927],
+           [-61.03081226348877, 2.737643333552314],
+           [-61.03012561798096, 2.7380719971296563],
+           [-61.03076934814453, 2.739229388022328]]],
+         [[[-61.00574970245361, 2.7323707590145947],
+           [-61.006693840026855, 2.7309132952992154],
+           [-61.00665092468262, 2.7299702295998194],
+           [-61.00574970245361, 2.731470561046316],
+           [-61.0050630569458, 2.731470561046316],
+           [-61.004934310913086, 2.7303988959185825],
+           [-61.004204750061035, 2.730098829511512],
+           [-61.00489139556885, 2.7291128965035165],
+           [-61.00407600402832, 2.729155763172862],
+           [-61.00291728973389, 2.730013096238568],
+           [-61.00313186645508, 2.7327565579372433],
+           [-61.00540637969971, 2.7327565579372433]]],
+         [[[-61.074371337890625, 2.7445019323712274],
+           [-61.07505798339844, 2.7373004025799994],
+           [-61.07377052307129, 2.734042553450431],
+           [-61.06973648071289, 2.735671479121647],
+           [-61.068878173828125, 2.742958751064909],
+           [-61.07377052307129, 2.748016949018307]]],
+         [[[-61.08664512634277, 2.7302702960390275],
+           [-61.08904838562012, 2.7280412292732077],
+           [-61.08552932739258, 2.7250405559483903],
+           [-61.07969284057617, 2.7234116158677084],
+           [-61.073856353759766, 2.7234116158677084],
+           [-61.0755729675293, 2.7266694938247946],
+           [-61.08329772949219, 2.730184562778323],
+           [-61.085357666015625, 2.730698962250733]]],
+         [[[-61.1319637298584, 2.7643059152219687],
+           [-61.139259338378906, 2.762334104866245],
+           [-61.14063262939453, 2.757704624211081],
+           [-61.13994598388672, 2.755818534332382],
+           [-61.137027740478516, 2.755389877124903],
+           [-61.13445281982422, 2.7579618180537753],
+           [-61.1308479309082, 2.7595907110991544],
+           [-61.12947463989258, 2.760790946651708],
+           [-61.13144874572754, 2.763448606774112]]]]),
+    CoberturaFlorestal = /* color: #98ff00 */ee.Geometry.MultiPolygon(
+        [[[[-61.02733612060547, 2.708236647334115],
+           [-61.02656364440918, 2.705793202398824],
+           [-61.02437496185303, 2.7081937799215754],
+           [-61.02428913116455, 2.7087510561662365],
+           [-61.02497577667236, 2.709994209941683],
+           [-61.02677822113037, 2.7087939235590444]]],
+         [[[-61.023902893066406, 2.7197679261352383],
+           [-61.02433204650879, 2.716938700632662],
+           [-61.02334499359131, 2.717024434836248],
+           [-61.02283000946045, 2.720625265886686],
+           [-61.0241174697876, 2.7205395319389694]]],
+         [[[-61.03630542755127, 2.7177103082457084],
+           [-61.037163734436035, 2.713766530822022],
+           [-61.03227138519287, 2.7111944951341456],
+           [-61.02913856506348, 2.713252124122094],
+           [-61.03433132171631, 2.718224713047024],
+           [-61.03561878204346, 2.7185247824132066]]],
+         [[[-60.881853103637695, 3.0339834114152064],
+           [-60.87704658508301, 3.035869038154484],
+           [-60.87949275970459, 3.037883226717751],
+           [-60.882110595703125, 3.03792608175273],
+           [-60.88241100311279, 3.0347548045698507]]]]),
+    VegetacaoAlagada = /* color: #0b4a8b */ee.Geometry.MultiPolygon(
+        [[[[-60.99390506744385, 2.722725745700938],
+           [-60.994248390197754, 2.7223399435605224],
+           [-60.994462966918945, 2.721525471969591],
+           [-60.993990898132324, 2.721225403349986],
+           [-60.9935188293457, 2.7213111372489136],
+           [-60.992960929870605, 2.7219541412965995],
+           [-60.99339008331299, 2.7226400119026306]]],
+         [[[-60.99266052246094, 2.735199948233798],
+           [-60.99326133728027, 2.732670824854026],
+           [-60.99188804626465, 2.732413625567685],
+           [-60.99141597747803, 2.735371414032649],
+           [-60.992231369018555, 2.7352856811362956]]],
+         [[[-60.998196601867676, 2.732199292786967],
+           [-60.998454093933105, 2.7296701630856903],
+           [-60.99617958068848, 2.7306560956364363],
+           [-60.99502086639404, 2.731341961281476],
+           [-60.99411964416504, 2.7322850259038347],
+           [-60.995450019836426, 2.732456492119236],
+           [-60.99690914154053, 2.7330137571501134],
+           [-60.99785327911377, 2.732499358669247]]],
+         [[[-60.99330425262451, 2.7401295801655228],
+           [-60.992231369018555, 2.7394865858465938],
+           [-60.99107265472412, 2.7393151206365527],
+           [-60.990986824035645, 2.7401295801655228],
+           [-60.99163055419922, 2.7409440391403894],
+           [-60.99278926849365, 2.7402153127152964],
+           [-60.993475914001465, 2.7405153765911296]]],
+         [[[-61.065359115600586, 2.844032867929395],
+           [-61.06355667114258, 2.845404466647352],
+           [-61.06432914733887, 2.847118962749759],
+           [-61.06518745422363, 2.8463474398193362],
+           [-61.065359115600586, 2.84523301689683]]],
+         [[[-61.05523109436035, 2.8450615671208257],
+           [-61.05154037475586, 2.8445472176398265],
+           [-61.05119705200195, 2.8430041678204123],
+           [-61.049909591674805, 2.8431756179022845],
+           [-61.051626205444336, 2.8460045405733223],
+           [-61.05471611022949, 2.8460045405733223]]],
+         [[[-60.995750427246094, 2.8469475132543174],
+           [-60.99454879760742, 2.8445472176398265],
+           [-60.992746353149414, 2.8469475132543174],
+           [-60.995492935180664, 2.848576282430781]]],
+         [[[-61.010427474975586, 2.847976209844258],
+           [-61.00836753845215, 2.8481476591866004],
+           [-61.00802421569824, 2.8502907738117687],
+           [-61.00931167602539, 2.8506336717815035],
+           [-61.00991249084473, 2.8493478038682256]]]]),
+    Grassland = /* color: #ffc82d */ee.Geometry.MultiPolygon(
+        [[[[-61.00883960723877, 2.7233687489937384],
+           [-61.0096549987793, 2.7213111372489136],
+           [-61.009182929992676, 2.7180532448042736],
+           [-61.00557804107666, 2.718267580103914],
+           [-61.00703716278076, 2.720625265886686],
+           [-61.00489139556885, 2.7223399435605224],
+           [-61.003217697143555, 2.721525471969591],
+           [-61.00154399871826, 2.7215683389091567],
+           [-61.000685691833496, 2.722382810471107],
+           [-60.998239517211914, 2.7237116839428794],
+           [-61.00308895111084, 2.7246118877197545],
+           [-61.00532054901123, 2.7246976213776977],
+           [-61.00587844848633, 2.7232830152411927],
+           [-61.00811004638672, 2.7237116839428794]]],
+         [[[-61.07282638549805, 2.7898534218820634],
+           [-61.072654724121094, 2.7829950851288463],
+           [-61.069650650024414, 2.78642425849995],
+           [-61.06407165527344, 2.7956829766721913],
+           [-61.0645866394043, 2.7978261880665496],
+           [-61.07222557067871, 2.792082372718026]]],
+         [[[-61.127071380615234, 2.8069990885286344],
+           [-61.126298904418945, 2.803398519348784],
+           [-61.12235069274902, 2.8081992757906358],
+           [-61.123552322387695, 2.8106853740527105],
+           [-61.127586364746094, 2.8078563652701654]]],
+         [[[-61.136770248413086, 2.8081992757906358],
+           [-61.13565444946289, 2.809056551651382],
+           [-61.13471031188965, 2.8117998301754494],
+           [-61.136512756347656, 2.810856828910097],
+           [-61.137027740478516, 2.808970824093628]]],
+         [[[-61.00459098815918, 2.814971737926779],
+           [-61.00107192993164, 2.8151431921539447],
+           [-60.99987030029297, 2.8172006409116013],
+           [-61.005449295043945, 2.815743281750329]]],
+         [[[-60.88640213012695, 2.866921207421375],
+           [-60.88228225708008, 2.8694929024131954],
+           [-60.87841987609863, 2.8701786867674057],
+           [-60.876874923706055, 2.870864470710089],
+           [-60.8781623840332, 2.8723217602214257],
+           [-60.88580131530762, 2.8695786254799684],
+           [-60.88700294494629, 2.8681213324705683]]]]),
+    Mix_CROP_NATURAL = /* color: #00ffff */ee.Geometry({
+      "type": "GeometryCollection",
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.90717315673828,
+                2.8904091396605227
+              ],
+              [
+                -60.90502738952637,
+                2.8916949613675795
+              ],
+              [
+                -60.89790344238281,
+                2.891952125534096
+              ],
+              [
+                -60.902109146118164,
+                2.8951238121252634
+              ],
+              [
+                -60.90588569641113,
+                2.892466453692211
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.90665817260742,
+                2.897438280520999
+              ],
+              [
+                -60.903825759887695,
+                2.901638599965089
+              ],
+              [
+                -60.90751647949219,
+                2.901638599965089
+              ],
+              [
+                -60.91094970703125,
+                2.897695443384048
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.93026161193848,
+                2.9048959798103797
+              ],
+              [
+                -60.92339515686035,
+                2.9036101730987087
+              ],
+              [
+                -60.9217643737793,
+                2.906524666209765
+              ],
+              [
+                -60.92734336853027,
+                2.907810469601585
+              ],
+              [
+                -60.92940330505371,
+                2.9056674631345882
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -60.943307876586914,
+                2.905581742791261
+              ],
+              [
+                -60.937814712524414,
+                2.903953055031616
+              ],
+              [
+                -60.936527252197266,
+                2.9058389038017136
+              ],
+              [
+                -60.94287872314453,
+                2.9075533090404693
+              ]
+            ]
+          ],
+          "evenOdd": true
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -61.19410514831543,
+                1.9561304214041275
+              ],
+              [
+                -61.1923885345459,
+                1.9525276293508689
+              ],
+              [
+                -61.189727783203125,
+                1.9523560676317688
+              ],
+              [
+                -61.190757751464844,
+                1.9558730793710317
+              ],
+              [
+                -61.19307518005371,
+                1.9558730793710317
+              ]
+            ]
+          ],
+          "geodesic": true,
+          "evenOdd": true
+        }
+      ],
+      "coordinates": []
+    }),
+    imageCollectionMODIS = ee.ImageCollection("MODIS/006/MOD13Q1"),
+    NFshp = ee.FeatureCollection("users/luizcf14/NFShp"),
+    geometry2 = /* color: #d63000 */ee.Geometry.MultiPoint(),
+    geometry3 = /* color: #98ff00 */ee.Geometry.Polygon(
+        [[[-61.424560546875, 3.486006446505586],
+          [-61.44378662109375, 2.4574371277074687],
+          [-59.90020751953125, 2.4574371277074687],
+          [-59.8919677734375, 3.538093496471126],
+          [-61.42730712890625, 3.5435761742762812]]]);
+
+var legend = ui.Panel({
+  style: {
+    position: 'bottom-left',
+    padding: '8px 15px'
+  }
+});
+var legendTitle = ui.Label({
+  value: 'Classes',
+  style: {
+    fontWeight: 'bold',
+    fontSize: '18px',
+    margin: '0 0 4px 0',
+    padding: '0'
+  }
+});
+legend.add(legendTitle);
+var loading = ui.Label('Legend:', {margin: '2px 0 4px 0'});
+legend.add(loading);
+
+var makeRow = function(color, name) {
+  // Create the label that is actually the colored box.
+  var colorBox = ui.Label({
+    style: {
+      backgroundColor: '#' + color,
+      // Use padding to give the box height and width.
+      padding: '8px',
+      margin: '0 0 4px 0'
+    }
+  });
+
+  // Create the label filled with the description text.
+  var description = ui.Label({
+    value: name,
+    style: {margin: '0 0 4px 6px'}
+  });
+
+  return ui.Panel({
+    widgets: [colorBox, description],
+    layout: ui.Panel.Layout.Flow('horizontal')
+  });
+};
+
+legend.add(makeRow('0095ff', 'Agua'));
+legend.add(makeRow('6dff64', 'Solo com Arbustos'));
+legend.add(makeRow('137c00', 'Cobertura Florestal'));
+legend.add(makeRow('01d67d', 'Vegetação Alagada'));
+legend.add(makeRow('ffc907', 'Solo com Gramineas'));
+legend.add(makeRow('efff03', 'Mosaico 50% Natural, 50% Corte'));
+legend.add(makeRow('ff0000', 'Agricultura'));
+legend.add(makeRow('ff0de1', 'Pasto'));
+Map.add(legend);
+///////////////////////////////////////////////////////////////////////////////
+//Function for acquiring Landsat TOA image collection
+function getImageCollection(studyArea,startDate,endDate){
+  var ls;var l4TOAs;var l5TOAs;var l7TOAs;var l8TOAs;var out;
+  
+  var sensorBandDictLandsatTOA = ee.Dictionary({L8 : ee.List([1,2,3,4,5,11,6]),
+                        L7 : ee.List([0,1,2,3,4,5,7]),
+                        L5 : ee.List([0,1,2,3,4,5,6]),
+                        L4 : ee.List([0,1,2,3,4,5,6])
+  });
+  var bandNamesLandsatTOA = ee.List(['blue','green','red','nir','swir1','temp','swir2']);
+
+  l4TOAs = ee.ImageCollection('LANDSAT/LT4_L1T_TOA')
+      .filterDate(startDate,endDate)
+      .filterBounds(studyArea)
+      .select(sensorBandDictLandsatTOA.get('L4'),bandNamesLandsatTOA);
+  
+  l5TOAs = ee.ImageCollection('LANDSAT/LT5_L1T_TOA')
+      .filterDate(startDate,endDate)
+      .filterBounds(studyArea)
+      .select(sensorBandDictLandsatTOA.get('L5'),bandNamesLandsatTOA);
+  
+  l8TOAs = ee.ImageCollection('LANDSAT/LC8_L1T_TOA')
+      .filterDate(startDate,endDate)
+      .filterBounds(studyArea)
+      .select(sensorBandDictLandsatTOA.get('L8'),bandNamesLandsatTOA);
+
+  l7TOAs = ee.ImageCollection('LANDSAT/LE7_L1T_TOA')
+      .filterDate(startDate,endDate)
+      .filterBounds(studyArea)
+      .select(sensorBandDictLandsatTOA.get('L7'),bandNamesLandsatTOA);
+  
+  ls = ee.ImageCollection(l4TOAs.merge(l5TOAs).merge(l7TOAs).merge(l8TOAs));
+  console.log(ls);
+  out = ls;
+  return out
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// A helper to apply an expression and linearly rescale the output.
+// Used in the landsatCloudScore function below.
+var rescale = function(img, exp, thresholds) {
+  return img.expression(exp, {img: img})
+      .subtract(thresholds[0]).divide(thresholds[1] - thresholds[0]);
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// Compute a cloud score and adds a band that represents the cloud mask.  
+// This expects the input image to have the common band names: 
+// ["red", "blue", etc], so it can work across sensors.
+function landsatCloudScore(img) {
+  // Compute several indicators of cloudiness and take the minimum of them.
+  var score = ee.Image(1.0);
+  // Clouds are reasonably bright in the blue band.
+  score = score.min(rescale(img, 'img.blue', [0.1, 0.3]));
+ 
+  // Clouds are reasonably bright in all visible bands.
+  score = score.min(rescale(img, 'img.red + img.green + img.blue', [0.2, 0.8]));
+   
+  // Clouds are reasonably bright in all infrared bands.
+  score = score.min(
+      rescale(img, 'img.nir + img.swir1 + img.swir2', [0.3, 0.8]));
+
+  // Clouds are reasonably cool in temperature.
+  score = score.where(img.select(['temp']).mask(),score.min(rescale(img,
+      'img.temp', [300, 290])));
+
+  // However, clouds are not snow.
+  var ndsi = img.normalizedDifference(['green', 'swir1']);
+  score =  score.min(rescale(ndsi, 'img', [0.8, 0.6])).multiply(100).byte();
+  score = score.lt(cloudThresh).rename('cloudMask');
+  img = img.updateMask(img.mask().and(score));
+  return img.addBands(score);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//Function for finding dark outliers in time series.
+//Original concept written by Carson Stam and adapted by Ian Housman.
+//Adds a band that is a mask of pixels that are dark, and dark outliers.
+function simpleTDOM2(collection,zScoreThresh,shadowSumThresh,dilatePixels){
+  var shadowSumBands = ['nir','swir1'];
+  
+  //Get some pixel-wise stats for the time series
+  var irStdDev = collection.select(shadowSumBands).reduce(ee.Reducer.stdDev());
+  var irMean = collection.select(shadowSumBands).mean();
+  
+  //Mask out dark dark outliers
+  collection = collection.map(function(img){
+    var zScore = img.select(shadowSumBands).subtract(irMean).divide(irStdDev);
+    var irSum = img.select(shadowSumBands).reduce(ee.Reducer.sum());
+    var TDOMMask = zScore.lt(zScoreThresh).reduce(ee.Reducer.sum()).eq(2)
+        .and(irSum.lt(shadowSumThresh)).not();
+    TDOMMask = TDOMMask.focal_min(dilatePixels);
+    return img.addBands(TDOMMask.rename('TDOMMask'));
+  });
+  
+  return collection;
+}
+
+
+/***
+ *Function to add time_start as pixel value creating a new one band
+ */
+var addTimeasBand = function(image) {
+  var MNDWI = null;
+  var NDVI = null;
+  var MNDWI_calc = null
+  var NDVI_calc = null;
+    //Gerando NDVI
+    NDVI = image.expression(
+      '(((banda4 - banda3)/(banda4 + banda3)))', {
+        'banda4': image.select('nir'),
+        'banda3': image.select('red'),
+        'banda2': image.select('green'),
+        'banda6': image.select('temp')
+    });
+    //Gerando NDWI
+    MNDWI = image.expression(
+      '((( banda2 - banda5) / (banda2 + banda5)))', {
+        'banda2': image.select('green'),
+        'banda5': image.select('swir1'),
+    });
+    MNDWI_calc = image.expression(
+      '(( banda2 - banda5)**2 / (banda2 + banda5)**2)**(1/2)', {
+        'banda2': image.select('green'),
+        'banda5': image.select('swir1'),
+    });
+    NDVI_calc = image.expression(
+      '((banda4 - banda3)**2/ (banda4 + banda3)**2)**(1/2)', {
+        'banda4': image.select('nir'),
+        'banda3': image.select('red'),
+        'banda2': image.select('green'),
+        'banda6': image.select('temp')
+    });
+    
+  //Gerando Razão Entre NDVI e NDWI
+  var WVI = image.expression(
+    '((((NDWI) - (NDVI))/((NDWI)+(NDVI))))', {
+      'NDVI': NDVI_calc,
+      'NDWI': MNDWI_calc
+
+  });
+  
+  var Water = image.expression(
+    '(NDVI/NDWI)', {
+      'NDVI': NDVI,
+      'NDWI': MNDWI
+
+  });
+ 
+  var maskedImage = image
+    .addBands(image.metadata('system:time_start'))
+    .addBands(NDVI.rename('NDVI'))
+    .addBands(MNDWI.rename('MNDWI'))
+    .addBands(WVI.rename('WVI'))
+  return  maskedImage;
+};
+
+///////////////////////////////////////////////////////////////////////////////
+//Function for wrapping cloud and shadow masking together.
+//Assumes image has cloud mask band called "cloudMask" and a TDOM mask called 
+//"TDOMMask".
+function cloudProject(img,shadowSumThresh,dilatePixels,cloudHeights){
+  
+  //Get the cloud mask
+  var cloud = img.select('cloudMask').not();
+  cloud = cloud.focal_max(dilatePixels);
+  cloud = cloud.updateMask(cloud);
+  
+  //Get TDOM mask
+  var TDOMMask = img.select(['TDOMMask']).not();
+  
+  //Project the shadow finding pixels inside the TDOM mask that are dark and 
+  //inside the expected area given the solar geometry
+  //Find dark pixels
+  var darkPixels = img.select(['nir','swir1','swir2'])
+      .reduce(ee.Reducer.sum()).lt(shadowSumThresh);//.gte(1);
+  
+  //Get scale of image
+  var nominalScale = cloud.projection().nominalScale();
+
+  //Find where cloud shadows should be based on solar geometry
+  //Convert to radians
+  var meanAzimuth = img.get('SUN_AZIMUTH');
+  var meanZenith = img.get('SUN_ELEVATION');
+  var azR = ee.Number(meanAzimuth).multiply(Math.PI).divide(180.0)
+      .add(ee.Number(0.5).multiply(Math.PI ));
+  var zenR = ee.Number(0.5).multiply(Math.PI )
+      .subtract(ee.Number(meanZenith).multiply(Math.PI).divide(180.0));
+  
+  //Find the shadows
+  var shadows = cloudHeights.map(function(cloudHeight){
+    cloudHeight = ee.Number(cloudHeight);
+    var shadowCastedDistance = zenR.tan()
+        .multiply(cloudHeight);//Distance shadow is cast
+    var x = azR.cos().multiply(shadowCastedDistance)
+        .divide(nominalScale).round();//X distance of shadow
+    var y = azR.sin().multiply(shadowCastedDistance)
+        .divide(nominalScale).round();//Y distance of shadow
+    return cloud.changeProj(cloud.projection(), cloud.projection()
+        .translate(x, y));
+  });
+
+  var shadow = ee.ImageCollection.fromImages(shadows).max();
+ 
+  //Create shadow mask
+  shadow = shadow.updateMask(shadow.mask().and(cloud.mask().not()));
+  shadow = shadow.focal_max(dilatePixels);
+  shadow = shadow.updateMask(shadow.mask().and(darkPixels).and(TDOMMask));
+
+  //Combine the cloud and shadow masks
+  var combinedMask = cloud.mask().or(shadow.mask()).eq(0);
+  
+  //Update the image's mask and return the image
+  img = img.updateMask(img.mask().and(combinedMask));
+  img = img.addBands(combinedMask.rename(['cloudShadowMask']));
+  return img;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/*
+EXAMPLE: Putting all of the pieces together to create a cloud free image 
+composite of the Mekong region.
+
+User inputs:
+studyArea: Study area
+
+startYear: First year to include imagery from
+
+endYear: Last year to include imagery from
+
+startJulian: Starting Julian Date- Supports wrapping for tropics and 
+    southern hemisphere
+    
+endJulian: Ending Julian date- Supports wrapping for tropics and 
+    southern hemisphere
+    
+cloudThresh: If using the cloudScoreTDOMShift method-Threshold for cloud 
+    masking (lower number masks more clouds.  Between 10 and 30 generally 
+    works best)
+    
+dilatePixels: Number of pixels to buffer clouds and cloud 
+    shadows by (1 or 2 generally is sufficient)
+    
+cloudHeights: Height of clouds to use to project cloud shadows
+ 
+zScoreThresh: Threshold for cloud shadow masking- lower number masks out 
+    less.  Between -0.8 and -1.2 generally works well
+    
+shadowSumThresh: Sum of IR bands to include as shadows within TDOM and the 
+    shadow shift method (lower number masks out less)
+    
+vizParams: Options for map visualization
+*/
+
+
+var studyArea = geometry;
+var year = 2004;
+var startDate = year+'-01-01';
+var endDate = year+'-12-31';
+var cloudThresh = 60;
+var dilatePixels = 2;
+var cloudHeights = ee.List.sequence(200,5000,500);
+var zScoreThresh = -1.0;
+var shadowSumThresh = 1.0;
+var vizParams = {'min': 0.01,'max': 0.45, 'bands':'swir1,nir,red','gamma':1.0};
+var vizParams2 = {'min': -1,'max': 1, 'bands':'WVI','gamma':1.0};
+
+//--------------------- MODIS
+//imageCollectionMODIS = imageCollectionMODIS;
+var collect  = imageCollectionMODIS.filterDate('2014-01-01',endDate);
+
+function avg_smooth(image,index){
+  var arr = collect.toArray();
+  var v1 = arr.arraySlice(0, 0, index-4 ).multiply(0.125)
+  var v2 = arr.arraySlice(0, 1, index-3).multiply(0.25)
+  var v3 = arr.arraySlice(0, 2, index-2).multiply(0.25)
+  var v4 = arr.arraySlice(0, 3, index-1).multiply(0.25)
+  var v5 = arr.arraySlice(0, 4,index).multiply(0.125)
+  var smoothed = v1.add(v2).add(v3).add(v4).add(v5);
+  return smoothed;
+}
+
+var array = imageCollectionMODIS.toList(100);
+var fittedSTD = imageCollectionMODIS.reduce(ee.Reducer.spearmansCorrelation());
+var fittedAVG = imageCollectionMODIS.reduce(ee.Reducer.kendallsCorrelation());
+for(var i = 5; i < 100;i = i +1){
+  array.replace(array.get(i),avg_smooth(array.get(i),i));
+}
+//var fitted = ee.ImageCollection(array).reduce(ee.Reducer.pearsonsCorrelation());
+//------------------
+
+var ls = getImageCollection(studyArea,startDate,endDate);
+ls = ls.map(landsatCloudScore);
+ls = simpleTDOM2(ls,zScoreThresh,shadowSumThresh,dilatePixels);
+ls = ls.map(function(img){return cloudProject(img,shadowSumThresh,dilatePixels,
+    cloudHeights)});
+var indexedCollection = ls.map(addTimeasBand);
+
+
+var mosaic = indexedCollection.median();
+Map.addLayer(mosaic,vizParams,'Landsat Composite',true);
+
+var pts = ee.FeatureCollection.randomPoints(Agua, 100);
+var addclass = function(feature) {
+  return feature.set({'class': 0});
+};
+var agua = pts.map(addclass);
+
+var pts = ee.FeatureCollection.randomPoints(SoloHerbaceasArbustos, 100);
+var addclass = function(feature) {
+  return feature.set({'class': 1});
+};
+var solo_herbaceas_arbustos = pts.map(addclass);
+
+var pts = ee.FeatureCollection.randomPoints(CoberturaFlorestal, 100);
+var addclass = function(feature) {
+  return feature.set({'class': 2});
+};
+var cobertura_florestal = pts.map(addclass);
+
+var pts = ee.FeatureCollection.randomPoints(VegetacaoAlagada, 100);
+var addclass = function(feature) {
+  return feature.set({'class': 3});
+};
+var vegetacao_alagada = pts.map(addclass);
+
+var pts = ee.FeatureCollection.randomPoints(Grassland, 100);
+var addclass = function(feature) {
+  return feature.set({'class': 4});
+};
+var grassland = pts.map(addclass);
+
+var pts = ee.FeatureCollection.randomPoints(Mix_CROP_NATURAL, 100);
+var addclass = function(feature) {
+  return feature.set({'class': 5});
+};
+var mix = pts.map(addclass);
+
+
+var amostras = agua.merge(solo_herbaceas_arbustos);
+var amostras = ee.FeatureCollection(amostras);
+var amostras = amostras.merge(cobertura_florestal);
+var amostras = ee.FeatureCollection(amostras);
+var amostras = amostras.merge(vegetacao_alagada);
+var amostras = ee.FeatureCollection(amostras);
+var amostras = amostras.merge(grassland);
+var amostras = ee.FeatureCollection(amostras);
+var amostras = amostras.merge(mix);
+
+var training = mosaic.sampleRegions({
+  // Get the sample from the polygons FeatureCollection.
+  collection: amostras,
+  // Keep this list of properties from the polygons.
+  properties: ['class'],
+  // Set the scale to get Landsat pixels in the polygons.
+  scale: 30
+});
+
+var classifier = ee.Classifier.randomForest({
+  numberOfTrees: 100,
+});
+
+
+// Train the classifier. (data, y, X)
+var trained = classifier.train(training, 'class');
+
+// Classify the image.
+var classified = mosaic.classify(trained);
+imageCollectionMODIS = imageCollectionMODIS.filterBounds(geometry);
+var imageCollectionMODIS_MIN = imageCollectionMODIS.filterDate('2016-04-01','2016-07-01').min();
+var imageCollectionMODIS_MEDIAN = imageCollectionMODIS.filterDate('2016-04-01','2016-07-01').median();
+var imageCollectionMODIS_MAX = imageCollectionMODIS.filterDate('2016-07-01','2016-11-01').max();
+
+var imageAmplitude =  imageCollectionMODIS_MAX.select('EVI').subtract(imageCollectionMODIS_MIN.select('NDVI'));
+//console.log(imageAmplitude);
+//var antropico = ee.Image(1).updateMask(imageAmplitude.select(0).gte(0.26));
+var antropico =imageAmplitude.mask(classified.gte(4).or(classified.eq(1)));
+
+// Get a confusion matrix representing resubstitution accuracy.
+var tac = trained.confusionMatrix();
+//print('Resubstitution error matrix: ', tac);
+//print('Training overall accuracy: ', tac.accuracy());
+//print('Training kappa: ', tac.kappa());
+//var palette =['#f342ff','#36daff ', '#fcff5c', '#398943', '#ffba21'];
+var palette =['0095ff','6dff64','137c00','01d67d','ffc907','efff03'];
+
+var avgMODIS = fittedAVG;
+var stdMODIS = fittedSTD;
+//Map.addLayer(stdMODIS.addBands(avgMODIS), {}, 'MODIS Fitted');
+//Map.addLayer(NFshp,{},'NF - Shape');
+var classifiedCliped = classified.clip(NFshp);
+classifiedCliped = classifiedCliped.clip(geometry3)
+//classifiedCliped =classifiedCliped .unmask(0);
+// Count total pixeis 
+  var pixelCount = classifiedCliped.reduceRegion({
+    reducer: ee.Reducer.count(),
+    geometry: geometry3,
+    scale: 30,
+    maxPixels: 1e13
+  });
+  console.log(pixelCount);
+
+
+//Map.addLayer(classifiedCliped, {min: 0, max: 5, palette: palette}, 'Vegetation Type');
+//Map.addLayer(antropico.updateMask(antropico.gte(3500)).clip(NFshp), {min: 0, max: 10000, bands:['EVI']}, 'Agricultura');
+//Map.addLayer(imageCollectionMODIS_MIN, {min: 0, max: 10000, bands:['NDVI']}, 'AntropicoMIN',false);
+//Map.addLayer(imageCollectionMODIS_MEDIAN.gte(5277), {min: 0, max: 10000, bands:['NDVI']}, 'AntropicoMEDIAN');
+//Map.addLayer(imageCollectionMODIS_MAX, {min: 0, max: 10000, bands:['NDVI']}, 'AntropicoMAX',false);
+
+Export.image.toDrive({
+  image:classified.byte(),
+  description: 'RO_NF'+year,
+  folder: 'mosaico_nf',
+  maxPixels:10000000000000,
+  scale: 30,
+  region: geometry
+});

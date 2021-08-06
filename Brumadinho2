@@ -1,0 +1,18 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #d63000 */ee.Geometry.Point([-44.128050011401456, -20.124167072495055]),
+    imageVisParam2 = {"opacity":1,"bands":["B4","B3","B2"],"min":661.9980196029791,"max":2234.27082960337,"gamma":0.659},
+    imageVisParam = {"opacity":1,"bands":["B4","B3","B2"],"min":282.34396546372125,"max":1162.695518663263,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+
+var img27 = ee.Image('COPERNICUS/S2/20190127T131249_20190127T131243_T23KNT')
+  //.filterDate('2019-01-01', '2019-01-30')
+  //.filterBounds(geometry)
+
+var img22 = ee.Image('COPERNICUS/S2/20190122T131241_20190122T131239_T23KNT')
+  //.filterDate('2019-01-01', '2019-01-30')
+  //.filterBounds(geometry)
+
+
+Map.addLayer(img27,imageVisParam2,'img27')
+Map.addLayer(img22,imageVisParam,'img22')
+

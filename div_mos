@@ -1,0 +1,57 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var grid = ee.FeatureCollection("users/IagoOliveira/WRS2_descending"),
+    l8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA"),
+    geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-45.258333921402176, -22.82094751340062],
+          [-45.258333921402176, -23.427162668730517],
+          [-44.665072202652176, -23.427162668730517],
+          [-44.665072202652176, -22.82094751340062]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// Filtrando o grid para o exemplo
+var cenas = grid
+            .filterBounds(geometry);
+            
+print(cenas.size()); // 27 cenas
+
+
+// Imagem de exemplo
+var mosaico = l8
+            .filterDate('2015-01-01','2015-12-31')
+            .filterBounds(cenas)
+            .filterMetadata('CLOUD_COVER', 'less_than', 3)
+            .select(['B4','B3','B2'])
+            .median()
+            
+            
+var clip = mosaico.clip(cenas)//addSadeck
+
+
+Map.centerObject(cenas);
+Map.addLayer(mosaico, {bands: ['B4','B3','B2'], min: 0, max: 0.4}, 'Imagem');
+Map.addLayer(cenas, {color: 'green'}, 'Cenas Landsat 8');
+Map.addLayer(clip, {bands: ['B4','B3','B2'], min: 0, max: 0.4}, 'Imagem');//addSadeck
+
+//addSadeck
+Export.image.toDrive({
+  image:clip,
+  description:'clip',
+  region: cenas.map(),
+  scale: 30,
+  crs: 'EPSG:4326',
+  folder: 'GEE',
+  maxPixels: 1000000000000
+});
+
+
+
+
+// Como clipar a imagem "mosaico" utilizando o objeto "cenas"?
+// O resultado deveria conter 27 imagens já que são 27 features

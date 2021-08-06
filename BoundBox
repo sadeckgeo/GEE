@@ -1,0 +1,22 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = 
+    /* color: #98ff00 */
+    /* shown: false */
+    ee.Geometry.MultiPoint(
+        [[-48.49979396274133, -18.799070785243558],
+         [-47.99442286899133, -19.058875593346194]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var box = geometry.bounds();
+Map.centerObject(box); 
+Map.addLayer(box, {color: 'red'}, 'BoundBox'); 
+Map.addLayer(geometry, {color: 'red'}, 'Geometry')
+
+var listCoords = ee.Array.cat(box.coordinates(), 1); 
+
+var xCoords = listCoords.slice(1, 0, 1); 
+var yCoords = listCoords.slice(1, 1, 2);
+
+var xMin = xCoords.reduce('min', [0]).get([0,0]);
+var xMax = xCoords.reduce('max', [0]).get([0,0]);
+var yMin = yCoords.reduce('min', [0]).get([0,0]);
+var yMax = yCoords.reduce('max', [0]).get([0,0]);

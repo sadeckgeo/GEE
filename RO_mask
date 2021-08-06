@@ -1,0 +1,90 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var ro = ee.FeatureCollection("users/sadeckgeo/RO_UF_2019"),
+    ti = ee.FeatureCollection("users/sadeckgeo/ti_sirgas_RO"),
+    geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    ee.Geometry.MultiPoint(
+        [[-63.51315098736735, -11.553214198798921],
+         [-63.64361262392522, -10.852714053541717],
+         [-62.332906433324496, -12.411725796835452]]),
+    imageVisParam = {"opacity":1,"bands":["first"],"palette":["ff1475"]};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//bloco vetorial Assets Sadeck (FREE)
+//fonte: IBGE (https://www.ibge.gov.br/geociencias/downloads-geociencias.html)
+//fonte: FUNAI (http://www.funai.gov.br/index.php/shape)
+var ro = ee.FeatureCollection("users/sadeckgeo/RO_UF_2019"),
+    ti = ee.FeatureCollection("users/sadeckgeo/ti_sirgas_RO");
+
+//bloco buffer 10km    
+//var addBuffer = function(feature) {
+//  return feature.buffer(10000);
+//};
+
+var tiBuffered = ee.FeatureCollection("users/cesargdiniz/tiBuffered10k")
+
+
+//bloco mapbiomas
+var year = 2019
+
+
+var mapbio = ee.Image('projects/mapbiomas-workspace/public/collection5/mapbiomas_collection50_integration_v1')
+    .select('classification_'+ String(year))
+    
+var i = ee.ImageCollection('projects/mapbiomas-workspace/MOSAICOS/workspace-c3')
+    .filterMetadata('year', 'equals', year)
+    .mosaic()
+
+
+//PRODES    
+var prodes = ee.Image('users/sadeckgeo/PDigital2000_2020_AMZ')
+    .remap([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30],[0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0])
+
+var image = ee.Image("users/sadeckgeo/PDigital2000_2020_AMZ"),
+    imageVisParam = {"opacity":1,"bands":["b1"],"min":1,"max":30,"palette":["416214","2537dd","e22fcd","e238e7","f7ff00","f79455","fca95e","feb76b","fec278","fecd85","ffd892","ffe39f","ffefac","fffab9","fafdbd","eef8ba","e2f4b6","d7efb2","cbeaae","c0e6ab","b4e1a7","a7daa5","95cea8","83c1ab","72b5ae","60a8b1","4e9cb4","b73c44","d2f9fa"]};
+
+//SAD
+var sad = ee.FeatureCollection("users/sadeckgeo/sad_08_2004_02_2021")
+.reduceToImage(['ANO'],ee.Reducer.first());
+
+
+var palettes = require('users/mapbiomas/modules:Palettes.js').get('classification5');    
+
+//count de classes mapbio e remap
+print(mapbio.reduceRegion(ee.Reducer.frequencyHistogram(), tiBuffered, 30, null, null,false, 10e13, 1))
+var remap = mapbio.remap([0,3,4,9,12,15,24,25,33,39,41],[0,0,1,1,1,1,1,1,1,1,1])
+print(remap.reduceRegion(ee.Reducer.frequencyHistogram(), tiBuffered, 30, null, null,false, 10e13, 1))
+
+Map.addLayer(i.clip(tiBuffered),{bands:['median_swir1_dry','median_nir_dry','median_red_dry'], min: 333, max: 3267, gamma: 0.45},'654 - RGB')
+Map.addLayer(remap.clip(tiBuffered),{},'NF_Mask')
+Map.addLayer(prodes.clip(tiBuffered),{},'PRODES_Mask')
+Map.addLayer(image.clip(tiBuffered),imageVisParam,'PRODES')
+Map.addLayer(sad.clip(tiBuffered),{"palette":["ff1475"]},'SAD')
+
+
+
+/*
+0 - no data
+12: Formação Campestre
+15: Pasto
+24: Infraestrutura Urbana
+25: Outras Areas Não Vegetadas
+3: Formação Florestal
+33: Rios, Lagos e Oceanos
+39: Soja
+4: Formação Savanica
+41: Outras Culturas Temporarias 
+9: Floresta Plantada
+*/
+
+
+//boloco de desenho
+Map.addLayer(ro,{},'RO',false)
+Map.addLayer(ti,{'color':'red'},'TI',false)
+Map.addLayer(tiBuffered,{'color':'blue'},'TI_Buffer',false)
+
+Map.addLayer(mapbio.clip(tiBuffered),{max:45, palette:palettes},'MapBiomas5',false)
+Map.centerObject(ro)
+
+
+//Export.table.toAsset(tiBuffered)

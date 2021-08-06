@@ -1,0 +1,82 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var roi = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-48.8910418264895, -5.2968163757396045],
+          [-48.8910418264895, -5.3993648239706395],
+          [-48.728306841137936, -5.3993648239706395],
+          [-48.728306841137936, -5.2968163757396045]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var l8 = ee.ImageCollection('LANDSAT/LC08/C01/T1_TOA')
+  .filterBounds(roi)
+  .filterDate('2020-01-01','2021-04-01')
+  .filterMetadata('CLOUD_COVER', 'less_than', 30)
+
+Map.addLayer(l8.first(),{bands: ['B6','B5','B4']}, 'l8')
+Map.centerObject(roi, 12)
+
+var classagua = function(img) {
+  var bnd = img.select('B6')
+  var agua = bnd.lt(0.020).rename('agua')  
+  agua = agua.updateMask(agua) 
+  return img.addBands(agua)  
+}
+
+l8 = l8.map(classagua)
+print(l8)
+
+//Gráfico
+var Classgraf = ui.Chart.image.series({
+  imageCollection: l8.select('agua'),
+  region: roi,
+  reducer: ee.Reducer.sum(),
+  scale: 100,
+})
+  .setOptions({
+      title: 'Agua',
+      hAxis: {'title': 'Date'},
+      vAxis: {'title': 'Número de pixels de água'},
+      lineWidth: 2
+    })
+    
+//add gráfico ao Mapa
+Classgraf.style().set({
+    position: 'bottom-right',
+    width: '500px',
+    height: '300px'
+  });
+  
+Map.add(Classgraf)
+
+//Orientação de ação
+var label = ui.Label('Clique em um ponto do gráfico.');
+Map.add(label);
+
+//Ação
+//https://tinyurl.com/ygvuwy68
+Classgraf.onClick(function(xValue, yValue, seriesName) {
+    if (!xValue) return;
+    
+    var equalDate = ee.Filter.equals('system:time_start', xValue);
+    var classification = ee.Image(l8.filter(equalDate).first()).clip(roi).select('agua');
+    var imgl8 = ee.Image(l8.filter(equalDate).first());
+    var S1Layer = ui.Map.Layer(imgl8, {
+      bands: ['B6'],
+      max: 0.500,
+      min: 0
+    });
+    Map.layers().reset([S1Layer]);
+    var visParams = {
+      min: 0.004,
+      max: 0.020,
+      palette: ['#FFFFFF','#0000FF']
+    }
+    Map.addLayer(classification,visParams,'agua')
+    label.setValue((new Date(xValue)).toUTCString());
+  });

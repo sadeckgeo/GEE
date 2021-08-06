@@ -1,0 +1,5 @@
+var municipio = ee.FeatureCollection('ft:13j1StRpmnGxFNbXAqp5GgaX4kwsd07ZT1AAnGqWk')
+  .filter(ee.Filter.stringContains('NM_MUNICIP', 'MARABÁ'));
+
+
+Map.addLayer(municipio);

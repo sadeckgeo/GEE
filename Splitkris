@@ -1,0 +1,135 @@
+var S1 = ee.ImageCollection("COPERNICUS/S1_GRD");
+
+var t1 = new Date();
+t1.setMonth(t1.getMonth() - 1);
+  
+var t2 = ee.Date(t1.getTime()) 
+S1 = S1
+  .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
+  .filterDate(t2, t2.advance(1,'month'))
+  .select(['VV','VH'])
+  .mean() 
+  S1 = S1.addBands(S1.select('VV').divide(S1.select('VH'))).rename(['VV','VH','ratio']);
+  
+var leftMap = ui.Map();
+var rightMap = ui.Map();
+
+leftMap.setOptions("SATELLITE");
+rightMap.setOptions("SATELLITE");
+
+leftMap.setControlVisibility(false);
+rightMap.setControlVisibility(false);
+leftMap.setControlVisibility({zoomControl: true});
+
+rightMap.setControlVisibility({layerList: true});
+
+var linker = new ui.Map.Linker([leftMap, rightMap]);
+
+
+var splitPanel = ui.SplitPanel({firstPanel: leftMap,secondPanel: rightMap,orientation: 'horizontal',wipe: true});
+ui.root.clear();
+ui.root.add(splitPanel);
+
+var layer = ui.Map.Layer(S1);
+layer.setVisParams({'min':[-25,-30,0.2],'max':[3, -2, 1], 'gamma':0.6});
+rightMap.layers().add(layer);
+layer.setName('Sentinel-1 backscatter');
+leftMap.setCenter(8.957589, 47.600185, 6);
+
+var label = new ui.Label({value: 'Suggestions:', style: { fontSize: '16px', stretch: 'vertical',  fontWeight: 'bold'}});
+
+var parisZoom = new ui.Button({ label: 'Paris', onClick: function() { leftMap.setCenter(2.350876, 48.854044, 12)}});
+
+var windfarmZoom = new ui.Button({label: 'Offshore wind farms', onClick: function() { leftMap.setCenter(2.221526, 51.721082,  9)}});
+
+var MountEverestZoom = new ui.Button({label: 'Mount Everest', onClick: function() { leftMap.setCenter(86.925104, 27.988347, 10)}});
+
+var agricultureZoom = new ui.Button({label: 'Agriculture',onClick: function() {leftMap.setCenter(5.219898, 50.736641, 12)}});
+
+var niledeltaZoom = new ui.Button({label: 'Nile delta',onClick: function() {leftMap.setCenter(31.271549, 30.864736, 9)}});
+
+var tenerifeZoom = new ui.Button({label: 'Tenerife',onClick: function() {leftMap.setCenter(-16.625064, 28.287297, 11)}});
+
+var sanfranciscoZoom = new ui.Button({label: 'San Francisco',onClick: function() {leftMap.setCenter(-122.448595, 37.794794, 13)}});
+
+var icelandZoom = new ui.Button({label: 'Iceland',onClick: function() {leftMap.setCenter(-18.411052, 64.843499, 7)}});
+
+var AfghanistanZoom = new ui.Button({label: 'Afghanistan',onClick: function() {leftMap.setCenter(63.953475, 32.987774, 5)}});
+
+var emptyLabel = new ui.Label({value: '',style: {fontSize: '14px',stretch: 'vertical'}});
+
+var legendGeneral= new ui.Label({value: 'Sentinel-1 backscatter:', style: {fontSize: '14px',stretch: 'vertical',    fontWeight: 'bold',   maxWidth: '100px'}});
+
+var legendVV = new ui.Label({value: 'Red: VV (dB)',style: {fontSize: '14px',stretch: 'vertical'}});
+
+var legendVH = new ui.Label({value: 'Green: VH (dB)', style: {fontSize: '14px',stretch: 'vertical'}});
+
+var legendRatio = new ui.Label({value: 'Blue: VV/VH ratio',style: {fontSize: '14px',stretch: 'vertical'}});
+
+var colorPaletteLabel= new ui.Label({value: 'Change color range min/max:', style: {fontSize: '14px',stretch: 'vertical',fontWeight: 'bold',maxWidth: '100px'}});
+
+var redColorLabel = new ui.Label({value: 'Red:  ',style: {fontSize: '14px',stretch: 'horizontal'}});
+
+var redMin = ui.Textbox({placeholder: 'min', value: -25, style: {maxWidth: '40px'},onChange: function(text){
+  var params = layer.getVisParams();
+  layer.setVisParams({'min':[text,params['min'][1],params['min'][2]],'max':[params['max'][0], params['max'][1], params['max'][2]], 'gamma':0.6});}
+  
+});
+
+var redMax = ui.Textbox({placeholder: 'max',value: 3,style: {maxWidth: '40px'},onChange: function(text){
+  var params = layer.getVisParams();
+  layer.setVisParams({'min':[params['min'][0],params['min'][1],params['min'][2]],'max':[text, params['max'][1], params['max'][2]], 'gamma':0.6});
+  
+}
+  
+});
+
+var redColorPanel = new ui.Panel({widgets: [redColorLabel, redMin, redMax], layout: ui.Panel.Layout.flow('horizontal'),});
+
+var greenColorLabel = new ui.Label({value: 'Green: ',style: {fontSize: '14px',stretch: 'horizontal'}});
+
+var greenMin = ui.Textbox({placeholder: 'min',value: -30, style: {maxWidth: '40px'},onChange: function(text){
+  var params = layer.getVisParams();
+  layer.setVisParams({'min':[params['min'][0], text, params['min'][2]],'max':[params['max'][0], params['max'][1], params['max'][2]], 'gamma':0.6});
+  
+}
+  
+});
+
+var greenMax = ui.Textbox({placeholder: 'max',value: -2,style: {maxWidth: '40px'},onChange: function(text){
+  var params = layer.getVisParams();
+  layer.setVisParams({'min':[params['min'][0],params['min'][1],params['min'][2]],'max':[params['max'][0], text, params['max'][2]], 'gamma':0.6});
+  
+}
+  
+});
+
+var greenColorPanel = new ui.Panel({widgets: [greenColorLabel, greenMin, greenMax],layout: ui.Panel.Layout.flow('horizontal'),});
+var blueColorLabel = new ui.Label({value: 'Blue: ', style: {fontSize: '14px',stretch: 'horizontal'}});
+var blueMin = ui.Textbox({placeholder: 'min',  value: 0.2, style: {maxWidth: '40px'},onChange: function(text){
+  var params = layer.getVisParams();
+  layer.setVisParams({'min':[params['min'][0],params['min'][1], text],'max':[params['max'][0], params['max'][1], params['max'][2]], 'gamma':0.6});
+  
+}
+  
+});
+
+var blueMax = ui.Textbox({placeholder: 'max',value: 1,style: {maxWidth: '40px'},onChange: function(text){
+  var params = layer.getVisParams();
+  layer.setVisParams({'min':[params['min'][0],params['min'][1],params['min'][2]],'max':[params['max'][0], params['max'][1], text], 'gamma':0.6});
+  
+}
+  
+});
+
+var blueColorPanel = new ui.Panel({widgets: [blueColorLabel, blueMin, blueMax],Layout: ui.Panel.Layout.flow('horizontal'),});
+var resetButton = ui.Button({label: 'Reset colors', onClick: function(){
+  redMin.setValue(-25), 
+  redMax.setValue(3) ,
+  greenMin.setValue(-30)  ,
+  greenMax.setValue(-2) ,
+  blueMin.setValue(0.2) ,
+  blueMax.setValue(1)}});
+var contactLabel = ui.Label({value: 'Contact: kristof.vantricht@vito.be', style: {fontSize: '11px', stretch: 'vertical',maxWidth: '120px'}})
+var exampleLocations = new ui.Panel({widgets: [label, parisZoom, windfarmZoom, MountEverestZoom, agricultureZoom, niledeltaZoom, tenerifeZoom,sanfranciscoZoom, icelandZoom, AfghanistanZoom, emptyLabel, legendGeneral, legendVV, legendVH, legendRatio, colorPaletteLabel, redColorPanel, greenColorPanel, blueColorPanel, resetButton, contactLabel], layout: ui.Panel.Layout.flow('vertical'),});
+ui.root.add(exampleLocations);

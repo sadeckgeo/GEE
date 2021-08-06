@@ -1,0 +1,88 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = 
+    /* color: #d63000 */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.FeatureCollection(
+        [ee.Feature(
+            ee.Geometry.Polygon(
+                [[[-51.14647086684965, -4.537464360122472],
+                  [-51.14647086684965, -4.593590631150725],
+                  [-51.07093986099027, -4.593590631150725],
+                  [-51.07093986099027, -4.537464360122472]]], null, false),
+            {
+              "system:index": "0"
+            })]),
+    geometry2 = 
+    /* color: #98ff00 */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-50.91026481216215, -4.537464360122472],
+          [-50.91026481216215, -4.594959509626915],
+          [-50.8361070973184, -4.594959509626915],
+          [-50.8361070973184, -4.537464360122472]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var iv = function (image)
+{
+var ndvi = image.normalizedDifference(['B5', 'B4']);
+image = image.addBands(ndvi.rename('ndvi'));
+return  image;
+}
+var OLI = ee.ImageCollection ('LANDSAT/LC08/C01/T1_RT_TOA')
+    .filterDate('2019-01-01', '2019-12-11')
+    .map(iv);
+
+var palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
+               '74A901', '66A000', '529400', '3E8601', '207401', '056201',
+               '004C00', '023B01', '012E01', '011D01', '011301'];
+               
+var img = OLI.median().select(['B4','B5','B6','ndvi'])
+
+var min = img.reduceRegion({
+  reducer:ee.Reducer.min(),
+  geometry: (geometry),
+  scale:30
+})
+print('Min',min)
+
+var min = img.reduceRegion({
+  reducer:ee.Reducer.min(),
+  geometry: (geometry2),
+  scale:30
+})
+print('Min2',min)
+
+
+var max = img.reduceRegion({
+  reducer:ee.Reducer.max(),
+  geometry: geometry,
+  scale:30
+})
+print('max',max)
+
+
+var std = img.reduceRegion({
+  reducer:ee.Reducer.sampleStdDev(),
+  geometry: geometry,
+  scale:30
+})
+print('desvio',std)
+
+
+var mean = img.reduceRegion({
+  reducer:ee.Reducer.mean(),
+  geometry: geometry,
+  scale:30
+})
+print('media',mean)
+               
+Map.addLayer(OLI.median(), {bands:'B6,B5,B4'});
+Map.addLayer(OLI.median(), {min: 0, max: 1,bands:['ndvi'] ,palette: palette}, 'NDVI');
+Map.centerObject(geometry,10)

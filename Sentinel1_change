@@ -1,0 +1,40 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #98ff00 */ee.Geometry.Point([-57.623291015625, -9.799060739192228]),
+    imageVisParam = {"opacity":1,"bands":["VH","VH_1","VH_2"],"min":-23.365116392937715,"max":-12.65526977778344,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var MT = ee.ImageCollection('COPERNICUS/S1_GRD').filterBounds(geometry)
+ .filterDate('2017-01-01' ,'2017-01-30')
+ .filter(ee.Filter.eq('instrumentMode', 'IW'))
+ .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
+ .filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
+ .select('VH');
+ 
+var MT2 = ee.ImageCollection('COPERNICUS/S1_GRD').filterBounds(geometry)
+ .filterDate('2017-07-01' ,'2017-07-30')
+ .filter(ee.Filter.eq('instrumentMode', 'IW'))
+ .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
+ .filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
+ .select('VH');
+
+var MT3 = ee.ImageCollection('COPERNICUS/S1_GRD').filterBounds(geometry)
+ .filterDate('2017-12-01' ,'2017-12-30')
+ .filter(ee.Filter.eq('instrumentMode', 'IW'))
+ .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
+ .filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
+ .select('VH');
+
+ 
+var RGB = ee.Image.cat(MT.mean(), MT2.mean(), MT3.mean());
+
+
+var r = MT2.median().divide(MT3.median())
+
+
+
+
+Map.addLayer(MT, {}, 'S1_MT',0);
+Map.addLayer(MT2, {}, 'S1_MT2',0);
+Map.addLayer(MT3, {}, 'S1_MT3',0);
+Map.addLayer(RGB, imageVisParam, 'RGB');
+Map.addLayer(r)
+Map.centerObject(MT)

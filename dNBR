@@ -1,0 +1,150 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var studyArea = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-53.83608689724724, -12.436716336938975],
+          [-53.83608689724724, -14.636877360807514],
+          [-51.26528611599724, -14.636877360807514],
+          [-51.26528611599724, -12.436716336938975]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// Store the Landsat 8 surface-reflectance image collection in a variable. 
+var landsat8_collection = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"); 
+// Filter to scenes that intersect your study region. 
+var landsat8_studyArea = landsat8_collection.filterBounds(studyArea); 
+// Filter to scenes for your time period of interest.  
+// the image ending _pre is the pre-event image.
+// the image ending _post is the post-event image.
+var landsat8_SA_pre = landsat8_studyArea.filterDate('2016-08-01', '2016-8-30'); 
+var landsat8_SA_post = landsat8_studyArea.filterDate('2018-08-01', '2018-8-30'); 
+
+// Function to cloud mask from the pixel_qa band of Landsat 8 SR data.
+function maskL8sr(image) {
+  // Bits 3 and 5 are cloud shadow and cloud, respectively.
+  var cloudShadowBitMask = ee.Number(2).pow(3).int();
+  var cloudsBitMask = ee.Number(2).pow(5).int();
+
+  // Get the pixel QA band.
+  var qa = image.select('pixel_qa');
+
+  // Both flags should be set to zero, indicating clear conditions.
+  var mask = qa.bitwiseAnd(cloudShadowBitMask).eq(0)
+      .and(qa.bitwiseAnd(cloudsBitMask).eq(0));
+
+  // Return the masked image, scaled to TOA reflectance, without the QA bands.
+  return image.updateMask(mask).divide(10000)
+      .select("B[0-9]*")
+      .copyProperties(image, ["system:time_start"]);
+}
+
+// Mask the clouds from all images in the image collection 
+// with the map function. 
+var landsat8_SA_1NoClouds = landsat8_SA_pre.map(maskL8sr); 
+var landsat8_SA_2NoClouds = landsat8_SA_post.map(maskL8sr); 
+
+// Center your map. You may need to change the scale value from 9 to cover the correct area of map
+Map.centerObject(studyArea, 9);
+
+// Reduce the collection to the median value per pixel. 
+var median_L8_pre = landsat8_SA_1NoClouds.median();
+var median_L8_post = landsat8_SA_2NoClouds.median();
+
+// Print the information of the reduced image. 
+print(median_L8_pre, 'median_L8_pre');
+print(median_L8_post, 'median_L8_post');
+
+// Display reduced image in the map window. 
+Map.addLayer(median_L8_pre, {min: 0.05, max: 0.8, bands: 'B6,B5,B4'}, 'pre-event: median composite');
+Map.addLayer(median_L8_post, {min: 0.05, max: 0.8, bands: 'B6,B5,B4'}, 'post-event: median composite');
+
+// Function to returns vegetation index for LS8
+var ls8_Indices = function(lsImage){
+  var nbr = lsImage.normalizedDifference(['B5', 'B7']).toFloat();
+  return nbr;
+  };
+
+var l8_index_pre = ls8_Indices(median_L8_pre);
+var l8_index_post = ls8_Indices(median_L8_post);
+
+// calculate dNBR  
+var dnbr = l8_index_pre.subtract(l8_index_post);
+
+var dnbrViz = {min: -.250, max: .660, palette: ['green', 'yellow','orange','red']};
+Map.addLayer(dnbr, dnbrViz,'dnbr');
+
+//categorize the dnbr map into standard thresholds, categories 0 to 6.
+var thresholds = ee.Image([-0.25,-0.1,0.1,0.27,0.44,0.66]);
+var dnbr_c = dnbr.lt(thresholds).reduce('sum');
+var dnbrViz_c = {min: 0, max: 6, palette: ['d73027','f46d43','fdae61','fee08b','ffffbf','91cf60','1a9850']};
+Map.addLayer(dnbr_c, dnbrViz_c, 'dnbr_c');
+
+//everything below here is to add a legend to the lower left of the map.
+//showing the categorized dnbr values.  you can change these category break values
+//in the ee.Image command above.
+
+// set position of panel
+var legend = ui.Panel({
+  style: {
+    position: 'bottom-left',
+    padding: '8px 15px'
+  }
+});
+
+// Create legend title
+var legendTitle = ui.Label({
+  value: 'dNBR classification',
+  style: {
+    fontWeight: 'bold',
+    fontSize: '18px',
+    margin: '0 0 4px 0',
+    padding: '0'
+    }
+});
+
+// Add the title to the panel
+legend.add(legendTitle);
+
+// Creates and styles 1 row of the legend.
+var makeRow = function(color, name) {
+
+      // Create the label that is actually the colored box.
+      var colorBox = ui.Label({
+        style: {
+          backgroundColor: '#' + color,
+          // Use padding to give the box height and width.
+          padding: '8px',
+          margin: '0 0 4px 0'
+        }
+      });
+
+      // Create the label filled with the description text.
+      var description = ui.Label({
+        value: name,
+        style: {margin: '0 0 4px 6px'}
+      });
+
+      // return the panel
+      return ui.Panel({
+        widgets: [colorBox, description],
+        layout: ui.Panel.Layout.Flow('horizontal')
+      });
+};
+
+//  Palette with the colors
+var palette =['d73027','f46d43','fdae61','fee08b','ffffbf','91cf60','1a9850'];
+
+// name of the legend
+var names = ['High severity','Moderate-high severity','Moderate-low severity','Low severity','Unchanged','Low regrowth','High regrowth'];
+
+// Add color and and names
+for (var i = 0; i < 7; i++) {
+  legend.add(makeRow(palette[i], names[i]));
+  }  
+
+// add legend to map (alternatively you can also print the legend to the console)
+Map.add(legend);

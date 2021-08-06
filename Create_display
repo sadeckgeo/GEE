@@ -1,0 +1,27 @@
+//Chamada de imagens
+var fil01 = ee.Image('LANDSAT/LC08/C01/T1_TOA/LC08_227067_20170904');
+var fil02 = ee.Image('LANDSAT/LC08/C01/T1_TOA/LC08_227067_20130520');
+
+//Criação das chamadas de display e link
+var maps = [display1(),display2()];
+ui.root.widgets().reset(maps);
+var linker = ui.Map.Linker(maps);
+
+//Função show display
+function display1()
+{
+  var map = new ui.Map();
+    map.addLayer(fil01, {bands: ['B6', 'B5', 'B4']});
+    map.add(ui.Label('2017', {position:'bottom-center'}));
+    map.centerObject(fil01);
+return  map;
+}
+
+function display2()
+{
+  var map = new ui.Map();
+    map.addLayer(fil02, {bands: ['B6', 'B5', 'B4']});
+    map.add(ui.Label('2013', {position:'bottom-center'}));
+    map.centerObject(fil01);
+return  map;
+}

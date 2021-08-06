@@ -1,0 +1,82 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var table = ee.FeatureCollection("users/sadeckgeo/MINICIPIOS");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var trmm1 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-01-01','2019-01-30')
+    .mean();
+var trmm2 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-02-01','2019-02-28')
+    .mean();
+var trmm3 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-03-01','2019-03-30')
+    .mean();
+var trmm4 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-04-01','2019-04-30')
+    .mean();
+var trmm5 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-05-01','2019-05-30')
+    .mean();
+var trmm6 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-06-01','2019-06-30')
+    .mean();
+var trmm7 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-07-01','2019-07-30')
+    .mean();
+var trmm8 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-08-01','2019-08-30')
+    .mean();    
+var trmm9 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-09-01','2019-09-30')
+    .mean();
+var trmm10 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-10-01','2019-10-30')
+    .mean();
+var trmm11 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-11-01','2019-11-30')
+    .mean();
+var trmm12 = ee.ImageCollection('TRMM/3B42').select('precipitation')
+    .filterDate('2019-12-01','2019-12-30')
+    .mean();
+var pa = ee.FeatureCollection('users/sadeckgeo/MINICIPIOS').select('UF');
+
+var clip1 = trmm1.clipToCollection (pa);
+var clip2 = trmm2.clipToCollection (pa);
+var clip3 = trmm3.clipToCollection (pa);
+var clip4 = trmm4.clipToCollection (pa);
+var clip5 = trmm5.clipToCollection (pa);
+var clip6 = trmm6.clipToCollection (pa);
+var clip7 = trmm7.clipToCollection (pa);
+var clip8 = trmm8.clipToCollection (pa);
+var clip9 = trmm9.clipToCollection (pa);
+var clip10 = trmm10.clipToCollection (pa);
+var clip11 = trmm11.clipToCollection (pa);
+var clip12 = trmm12.clipToCollection (pa);
+
+// Create a panel to hold the chart.
+var panel = ui.Panel();
+print (panel);
+
+// Register a function to draw a chart when a user clicks on the map.
+Map.onClick(function(coords) {
+  panel.clear();
+  var point = ee.Geometry.Point(coords.lon, coords.lat);
+  var chart = ui.Chart.image.regions([clip1, clip2, clip3, clip4, clip5, clip6, clip7, clip8, clip9, clip10, clip11, clip12], point, null, 27000, null, ['a_jan','b_Fev','c_Mar','d_Abr','e_Mai','f_Jun','g_Jul', 'h_Ago', 'i_Set', 'j_Out', 'k_Nov', 'l_Dez']);
+  chart.setOptions({title: 'Band values'});
+  panel.add(chart);
+});
+
+
+
+Map.addLayer(clip1, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Jan', 1);
+Map.addLayer(clip2, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Fev', 1);
+Map.addLayer(clip3, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Mar', 1);
+Map.addLayer(clip4, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Abr', 1);
+Map.addLayer(clip5, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Mai', 1);
+Map.addLayer(clip6, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Jun', 1);
+Map.addLayer(clip7, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Jul', 1);
+Map.addLayer(clip8, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Ags', 1);
+Map.addLayer(clip9, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Set', 1);
+Map.addLayer(clip10, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Out', 1);
+Map.addLayer(clip11, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Nov', 1);
+Map.addLayer(clip12, {bands:'precipitation', palette:['#ff650b', '#7309ff']},'Dez', 1);
+Map.centerObject(pa);

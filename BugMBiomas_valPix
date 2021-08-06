@@ -1,0 +1,64 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageVisParam = {"opacity":1,"bands":["classification_1985"],"max":45,"palette":["ffffff","129912","1f4423","006400","00ff00","687537","76a5af","29eee4","77a605","935132","bbfcac","45c2a5","b8af4f","f1c232","ffffb2","ffd966","f6b26b","f99f40","e974ed","d5a6bd","c27ba0","fff3bf","ea9999","dd7e6b","aa0000","ff99ff","0000ff","d5d5e5","dd497f","b2ae7c","af2a2a","8a2be2","968c46","0000ff","4fd3ff","645617","f3b4f1","02106f","02106f","c59ff4","ba87f8","e787f8","cca0d4","d082de","cd49e4","e04cfa"]},
+    geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-55.368282727557045, -8.421536461267783],
+          [-55.368282727557045, -8.434441837357456],
+          [-55.35536520894132, -8.434441837357456],
+          [-55.35536520894132, -8.421536461267783]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var m = ee.FeatureCollection('projects/mapbiomas-workspace/AUXILIAR/municipios-2016')
+    .filterMetadata('NM_MUNICIP','equals','PARAGOMINAS')
+    
+var ti = ee.FeatureCollection('projects/mapbiomas-workspace/AUXILIAR/areas-protegidas')
+    .filterMetadata('NomeTI', 'equals', 'TI Koatinemo')
+    
+var year = 2017
+
+var mapbio = ee.Image('projects/mapbiomas-workspace/public/collection5/mapbiomas_collection50_integration_v1')
+    .select('classification_'+ String(year))
+    
+var vs = ee.Image('projects/mapbiomas-workspace/public/collection5/mapbiomas_collection50_deforestation_regeneration_v1')
+    .select('classification_'+ String(year))
+
+    
+
+var i = ee.ImageCollection('projects/mapbiomas-workspace/MOSAICOS/workspace-c3')
+    .filterMetadata('year', 'equals', year)
+    .mosaic()
+
+var palettes = ["ffffff","129912","1f4423","006400","00ff00","687537","76a5af","29eee4","77a605","935132","bbfcac","45c2a5","b8af4f","f1c232","ffffb2","ffd966","f6b26b","f99f40","e974ed","d5a6bd","c27ba0","fff3bf","ea9999","dd7e6b","aa0000","ff99ff","0000ff","d5d5e5","dd497f","b2ae7c","af2a2a","8a2be2","968c46","0000ff","4fd3ff","645617","f3b4f1","02106f","02106f","c59ff4","ba87f8","e787f8","cca0d4","d082de","cd49e4","e04cfa"];
+
+var pixelVals = vs.reduceRegion(
+    {reducer: ee.Reducer.toList(), geometry: m.geometry(), scale: 30, maxPixels:1e16}); 
+
+var values = ee.List(pixelVals.get('classification_'+ String(year)))
+
+print(values.distinct())
+
+//Map.addLayer(m)
+Map.addLayer(mapbio.clip(m),{max:45, palette:palettes},'MapBiomas5')
+Map.addLayer(i.clip(m),{bands: 'median_swir1,median_nir,median_red',
+        gain: '0.08,0.06,0.2',
+        gamma: 0.75},'Landsat')
+Map.addLayer(vs.clip(m),{max:8, palette:palettes},'Veg_Sec')
+
+
+Map.centerObject(m,8)
+
+/*Export.image.toDrive({
+  image: mapbio.clip(m),
+  description: 'Coloque o nome do Município aqui',
+  region: m,
+  scale: 30,
+  crs: 'EPSG:4326',
+  folder: 'MapBiomas5',
+  maxPixels: 1000000000000
+});*/

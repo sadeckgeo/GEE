@@ -1,0 +1,24 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageCollection = ee.ImageCollection("COPERNICUS/S2_SR"),
+    table = ee.FeatureCollection("users/sadeckgeo/RO_UF_2019"),
+    imageVisParam = {"opacity":1,"bands":["B4","B3","B2"],"min":116,"max":1164.5,"gamma":1},
+    imageVisParam2 = {"opacity":1,"bands":["B4","B3","B2"],"min":234,"max":1713.5,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var i = ee.ImageCollection('COPERNICUS/S2_SR')
+    .filterDate('2020-01-01', '2020-12-31')
+    .filterBounds(table)
+    .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 20)
+    .median()
+
+Map.addLayer(i,imageVisParam2,'i')
+
+var i2 = ee.ImageCollection('COPERNICUS/S2_SR')
+    .filterDate('2021-01-01', '2021-12-31')
+    .filterBounds(table)
+    .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 20)
+    .median()
+    
+Map.addLayer(i2,imageVisParam,'i2')
+
+
+    

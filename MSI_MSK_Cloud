@@ -1,0 +1,34 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var ROI = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-56.2979048685242, -3.205113711506932],
+          [-56.2979048685242, -5.013122204545909],
+          [-53.7271040872742, -5.013122204545909],
+          [-53.7271040872742, -3.205113711506932]]], null, false),
+    geometry = 
+    /* color: #98ff00 */
+    /* shown: false */
+    ee.Geometry.Point([-55.992637883374385, -4.262126003375992]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var maskcloud = function(image) {
+  var QA60 = image.select(['QA60']);
+  var clouds = QA60.bitwiseAnd(1<<10).and(QA60.bitwiseAnd(1<<11));
+  return image.updateMask(clouds.not());
+}
+
+var S2 = ee.ImageCollection('COPERNICUS/S2')
+    .filter(ee.Filter.calendarRange(2018,2019,'year'))
+    .filterMetadata('CLOUDY_PIXEL_PERCENTAGE', 'less_than', 30)
+    .filterBounds(ROI)
+    .map(maskcloud)
+    .median()
+    
+Map.addLayer(S2, {bands:['B4','B3','B2'], min:450, max:1600, gamma:0.60}, 'MSI')
+Map.centerObject(geometry, 11)

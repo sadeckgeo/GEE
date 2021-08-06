@@ -1,0 +1,18 @@
+var modis = ee.ImageCollection('MODIS/006/MOD11A2').select('QC_Day').filterDate('2019-01-01', '2019-02-28')
+
+Map.addLayer(modis)
+
+var qc = modis.select('QC_Day').mosaic().int16()
+
+var mandatoryFlag = Math.pow(2, 1);
+var dataQuality = Math.pow(2, 0);
+var emissiveError = Math.pow(2, 0);
+var lsterror = Math.pow(2, 1);
+
+ var mask = qc.bitwiseAnd(mandatoryFlag).eq(0).and(
+             qc.bitwiseAnd(dataQuality).eq(0)).and(
+             qc.bitwiseAnd(emissiveError).eq(0)).and(
+             qc.bitwiseAnd(lsterror).eq(0));
+             
+var newQC = qc.updateMask(mask)
+Map.addLayer(newQC)

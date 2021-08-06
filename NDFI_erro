@@ -1,0 +1,135 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageCollection = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
+    geometry = /* color: #d63000 */ee.Geometry.Point([-55.522107397796276, -11.843874303684629]),
+    imageVisParam = {"opacity":1,"bands":["B6","B5","B4"],"min":241.48000000000002,"max":4248.52,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var collection = ee.ImageCollection('LANDSAT/LC08/C01/T1_SR')
+ .filterMetadata('CLOUD_COVER', 'less_than', 10)
+ .filterDate('2018-01-01', '2018-12-31')
+ .filterBounds(geometry)
+ .median();
+ 
+ Map.addLayer(collection,imageVisParam, 'L8');
+ 
+var getFractionsL8 = function(image){
+ // Define endmembers
+var coef = 10000;
+var bandNames = ['B2','B3','B4','B5','B6','B7'];
+var outBandNames = ['gv', 'npv', 'soil', 'cloud'];
+ // Define atmosphere
+// var atm = [805.6, 458.1, 286.8, 168.3, 46.8, 26.6];
+var atm = [0, 0, 0, 0, 0, 0];
+ // Define endmembers
+ var endmembers =
+ [
+ [ 119.0+atm[0], 475.0+atm[1], 169.0+atm[2],6250.0+atm[3],2399.0+atm[4], 675.0+atm[5]],//GV
+ [1514.0+atm[0],1597.0+atm[1],1421.0+atm[2],3053.0+atm[3],7707.0+atm[4],1975.0+atm[5]],//NPV
+ [1799.0+atm[0],2479.0+atm[1],3158.0+atm[2],5437.0+atm[3],7707.0+atm[4],6646.0+atm[5]],//Soil
+ [4031.0+atm[0],8714.0+atm[1],7900.0+atm[2],8989.0+atm[3],7002.0+atm[4],6607.0+atm[5]] //Cloud
+ ];
+
+ // Uminxing data
+ var fractions = image
+ .select(bandNames)
+ .multiply(coef)
+ .unmix(endmembers)
+ .max(0)
+ .multiply(100)
+ .toByte();
+ fractions = fractions.select([0, 1, 2, 3], outBandNames);
+// image = image.addBands({
+// 'srcImg': fractions,
+// 'names': outBandNames,
+// 'overwrite': true
+// });
+ return fractions;
+};
+
+var getNDFI = function(fractions){
+ // Calculate NDFI
+ var summed = fractions.select(['gv', 'npv', 'soil']).reduce(ee.Reducer.sum());
+ var gv = fractions.select('gv');
+ var npv = fractions.select('npv');
+ var soil = fractions.select('soil');
+ var cloud = fractions.select('cloud');
+
+ var gvs = (fractions.select('gv').divide(summed)).multiply(100).toByte();
+ var gvnpv = gv.add(npv);
+ var gvsnpv = gvs.add(npv);
+ var gvnpv_s = (gvnpv.divide(summed)).multiply(100);
+ var shade = summed.subtract(100).abs();
+ var soilcloud = fractions.select('soil').add(fractions.select('cloud'));
+ var soilshade = fractions.select('soil').add(shade);
+
+ //npv + soil + cloud
+ var npvSoil = fractions.select('npv').add(fractions.select('soil'));
+
+ //calculate NDFI
+ var ndfi = ee.Image.cat(gvs, npvSoil).normalizedDifference();
+ //rescale NDFI from 0-200
+ ndfi = ndfi.multiply(100).add(100).byte();
+ return ndfi;
+
+};
+
+var getNDFI3 = function(fractions){
+ // Calculate NDFI
+ var summed = fractions.select(['gv', 'npv', 'soil']).reduce(ee.Reducer.sum());
+ var gv = fractions.select('gv');
+ var npv = fractions.select('npv');
+ var soil = fractions.select('soil');
+ var cloud = fractions.select('cloud');
+
+ var gvs = (fractions.select(0).divide(summed)).multiply(100);
+ var gvnpv = gv.add(npv);
+ var gvsnpv = gvs.add(npv);
+ var gvnpv_s = (gvnpv.divide(summed)).multiply(100);
+ var shade = summed.subtract(100).abs();
+ var soilcloud = fractions.select(2).add(fractions.select(3));
+ var soilshade = fractions.select(2).add(shade);
+
+ //npv + soil + cloud
+ var npvSoil = fractions.select(1).add(fractions.select(2)).add(fractions.select(3));
+
+ //calculate NDFI
+ var ndfi3 = ee.Image.cat(gvnpv_s, soilcloud).normalizedDifference();
+
+ //rescale NDFI3 from 0-200
+ ndfi3 = ndfi3.multiply(100).add(100).byte();
+
+ return ndfi3;
+
+};
+
+//define legendas
+var visSMA = {'bands':['soil', 'gv', 'npv'], 'gain': [6.0,4.0,6.0]};
+
+//cria paleta de cores (branco - Rosa - Amarelo - Laranja - Verde Claro - Verde Escuro)
+var ndfi_color =
+ 'FFFFFF,FFFCFF,FFF9FF,FFF7FF,FFF4FF,FFF2FF,FFEFFF,FFECFF,FFEAFF,FFE7FF,'+
+ 'FFE5FF,FFE2FF,FFE0FF,FFDDFF,FFDAFF,FFD8FF,FFD5FF,FFD3FF,FFD0FF,FFCEFF,'+
+ 'FFCBFF,FFC8FF,FFC6FF,FFC3FF,FFC1FF,FFBEFF,FFBCFF,FFB9FF,FFB6FF,FFB4FF,'+
+ 'FFB1FF,FFAFFF,FFACFF,FFAAFF,FFA7FF,FFA4FF,FFA2FF,FF9FFF,FF9DFF,FF9AFF,'+
+ 'FF97FF,FF95FF,FF92FF,FF90FF,FF8DFF,FF8BFF,FF88FF,FF85FF,FF83FF,FF80FF,'+
+ 'FF7EFF,FF7BFF,FF79FF,FF76FF,FF73FF,FF71FF,FF6EFF,FF6CFF,FF69FF,FF67FF,'+
+ 'FF64FF,FF61FF,FF5FFF,FF5CFF,FF5AFF,FF57FF,FF55FF,FF52FF,FF4FFF,FF4DFF,'+
+ 'FF4AFF,FF48FF,FF45FF,FF42FF,FF40FF,FF3DFF,FF3BFF,FF38FF,FF36FF,FF33FF,'+
+ 'FF30FF,FF2EFF,FF2BFF,FF29FF,FF26FF,FF24FF,FF21FF,FF1EFF,FF1CFF,FF19FF,'+
+ 'FF17FF,FF14FF,FF12FF,FF0FFF,FF0CFF,FF0AFF,FF07FF,FF05FF,FF02FF,FF00FF,'+
+ 'FF00FF,FF0AF4,FF15E9,FF1FDF,FF2AD4,FF35C9,FF3FBF,FF4AB4,FF55AA,FF5F9F,'+
+ 'FF6A94,FF748A,FF7F7F,FF8A74,FF946A,FF9F5F,FFAA55,FFB44A,FFBF3F,FFC935,'+
+ 'FFD42A,FFDF1F,FFE915,FFF40A,FFFF00,FFFF00,FFFB00,FFF700,FFF300,FFF000,'+
+ 'FFEC00,FFE800,FFE400,FFE100,FFDD00,FFD900,FFD500,FFD200,FFCE00,FFCA00,'+
+ 'FFC600,FFC300,FFBF00,FFBB00,FFB700,FFB400,FFB000,FFAC00,FFA800,FFA500,'+
+ 'FFA500,F7A400,F0A300,E8A200,E1A200,D9A100,D2A000,CA9F00,C39F00,BB9E00,'+
+ 'B49D00,AC9C00,A59C00,9D9B00,969A00,8E9900,879900,7F9800,789700,709700,'+
+ '699600,619500,5A9400,529400,4B9300,439200,349100,2D9000,258F00,1E8E00,'+
+ '168E00,0F8D00,078C00,008C00,008C00,008700,008300,007F00,007A00,007600,'+
+ '007200,006E00,006900,006500,006100,005C00,005800,005400,005000,004C00';
+ 
+var visParMedianL8 = {'bands':['B6','B5','B4'], 'gain':[800,600,2000],'gamma':0.5 }; 
+var visNDFI = {'min':0, 'max':200, 'palette':ndfi_color};
+
+Map.addLayer();
+
+//http://repositorio.unb.br/bitstream/10482/23501/1/2017_KhalilAliGanem.pdf

@@ -1,0 +1,9 @@
+// SCRIPT PARA EXPORTAR POLIGONOS PARA O GOOGLE DRIVE,
+// COLAR O CÓDIGO DOS POLIGONOS AQUI EMBAIXO NA LINHA 4
+// O CODIGO DEVE COMEÇAR POR var geometry = 
+
+Export.table.toDrive({
+          collection: ee.FeatureCollection(geometry),
+          description:'poligonos_mapeados_AREA_DATA',
+          fileFormat: 'KML'
+        });

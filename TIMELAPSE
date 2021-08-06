@@ -1,0 +1,56 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var MINA = 
+    /* color: #98ff00 */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-47.773445014846516, -3.233755058640284],
+          [-47.773445014846516, -3.3115622204017434],
+          [-47.67868793476839, -3.3115622204017434],
+          [-47.67868793476839, -3.233755058640284]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//INDICES DE VEGETAÇÃO REUNIDOS NA FUNÇÃO APP
+//NDVI
+var app = function (image) {
+  var ndvi = image.normalizedDifference(['B5', 'B4']);
+image= image.addBands(ndvi.rename('NDVI')).visualize({
+  bands:['NDVI'], 
+  min:-1, 
+  max:1, 
+  palette:['FFFFFF', 'CE7E45','DF923D', 'F1B555', 'FCD163', '99B718', '74A901',
+              '66A000', '529400', '3E8601', '207401', '056201', '004C00', '012E01',
+              '011D01', '111301'], 
+  forceRgbOutput:true
+});
+return image;
+}
+
+
+var OLI = ee.ImageCollection('LANDSAT/LC08/C01/T1_RT_TOA')
+          .filterDate('2006-09-18', '2019-09-18')
+          .filterBounds(MINA)
+          .select('B6','B5','B4')
+          .map(app);
+
+//rampa de cor
+var palette = ['FFFFFF', 'CE7E45','DF923D', 'F1B555', 'FCD163', '99B718', '74A901',
+              '66A000', '529400', '3E8601', '207401', '056201', '004C00', '012E01',
+              '011D01', '111301'];
+              
+
+//Map.addLayer(OLI, {bands: 'B6,B5,B4'}, 'OLI');
+//Map.addLayer(OLI.median(), {min: 0, max: 1, bands: ['NDVI'], palette: palette}, 'NDVI');
+
+//TIME LAPSE NDVI
+Export.video.toDrive({
+collection: OLI,
+description: 'sfVideoEx2',
+dimensions: 720,
+framesPerSecond: 5,
+scale: 30,
+region: MINA,
+maxFrames: 40000
+});

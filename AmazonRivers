@@ -1,0 +1,96 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageCollection = ee.ImageCollection("LANDSAT/LC08/C01/T1_RT_TOA"),
+    geometry = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-70.5322265625, -4.127285323245357],
+          [-72.7734375, -5.00339434502215],
+          [-74.00390625, -7.406047717076259],
+          [-72.2900390625, -9.96885060854611],
+          [-70.576171875, -9.622414142924805],
+          [-70.6201171875, -11.005904459659451],
+          [-68.5107421875, -11.178401873711772],
+          [-65.390625, -9.70905706861821],
+          [-65.1708984375, -11.953349393643418],
+          [-61.962890625, -13.710035342476669],
+          [-60.6005859375, -13.667338259654947],
+          [-60.2490234375, -16.04581345375217],
+          [-57.65625, -17.936928637549432],
+          [-52.998046875, -18.104087015773946],
+          [-50.361328125, -12.983147716796566],
+          [-47.6806640625, -13.410994034321702],
+          [-46.0986328125, -12.726084296948184],
+          [-45.5712890625, -10.18518740926906],
+          [-46.6259765625, -7.928674801364035],
+          [-47.3291015625, -6.446317749457633],
+          [-44.912109375, -1.3621763466641585],
+          [-45.966796875, -1.0106897682409002],
+          [-49.833984375, 1.3621763466641712],
+          [-51.064453125, 3.4695573030614724],
+          [-51.591796875, 4.302591077119676],
+          [-52.8662109375, 2.3723687086440504],
+          [-55.9423828125, 2.6796866158037598],
+          [-56.4697265625, 2.064982495867117],
+          [-58.798828125, 1.4061088354351594],
+          [-59.4580078125, 1.7575368113083254],
+          [-59.677734375, 2.5040852618529215],
+          [-59.8095703125, 3.4256915244180624],
+          [-59.4580078125, 3.9957805129630377],
+          [-59.9853515625, 4.477856485570586],
+          [-59.853515625, 5.178482088522876],
+          [-60.7763671875, 5.397273407690917],
+          [-60.6884765625, 4.872047700241915],
+          [-62.490234375, 4.171115454867424],
+          [-63.28125, 3.9957805129630377],
+          [-64.951171875, 4.258768357307995],
+          [-64.1162109375, 2.6357885741666065],
+          [-63.5009765625, 2.1967272417616712],
+          [-64.248046875, 1.7136116598836224],
+          [-65.4345703125, 1.054627942275887],
+          [-66.5771484375, 0.8349313860427184],
+          [-67.2802734375, 2.152813583128846],
+          [-68.203125, 1.9332268264771233],
+          [-69.8291015625, 1.8014609294680355],
+          [-70.048828125, 0.7909904981540058],
+          [-70.224609375, 0],
+          [-69.4775390625, -1.1425024037061522],
+          [-70.0927734375, -4.302591077119676]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//--------------------- Funções
+var removerBorda = function(image){
+  var box = image.geometry();
+  return image.clip(box.buffer(-500.00));
+};
+var removerNuvem = function(image){
+  var scored = ee.Algorithms.Landsat.simpleCloudScore(image);
+  var imageSemNuvem = image.updateMask(scored.select(['cloud']).lt(70));
+  return removerBorda(imageSemNuvem);
+};
+
+
+//--------------------- Programa Principal
+var colecaoTempo = imageCollection.filterDate('2015-01-01','2016-06-09');
+var colecaoTempoEspaco = colecaoTempo.filterBounds(geometry);
+colecaoTempoEspaco = colecaoTempoEspaco.map(removerNuvem);
+var mosaicoContruido = colecaoTempoEspaco.median();
+//--- Classificando Agua
+var imagemHsv =  mosaicoContruido.select(['B5','B4','B3']).rgbToHsv();
+var hueBanda = imagemHsv.select('hue');
+// Intervalo Comum para Agua - 0.1 à 0.92 - B543 (0.4 - 0.93)
+var agua = hueBanda.updateMask(hueBanda.lte(0.93));
+agua = agua.updateMask(agua.gt(0.1));
+
+var imagemAgua = ee.Image(1).updateMask(agua);
+
+//--- Layers Exibidos
+Map.addLayer(imagemAgua,{},'Amazonia - Rios');
+Map.addLayer(mosaicoContruido,{min:0, max: 0.6,bands:['B6','B5','B4']},'Amazonia - landsat 8');
+Map.addLayer(imagemHsv,{bands:['hue']},'Amazonia - landsat 8 - Hue');
+
+Export.image.toDrive({
+  image: imagemAgua,
+  description: 'Classificacao_CorpoDagua',
+  region: geometry,
+  scale: 30,
+  crs: 'EPSG:4326',
+  folder: 'Rio',
+  maxPixels: 1000000000000
+});

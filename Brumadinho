@@ -1,0 +1,6 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #d63000 */ee.Geometry.Point([-44.145918953675164, -20.107137647888095]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var s2 = ee.ImageCollection('COPERNICUS/S2').filterBounds(geometry).median()
+
+Map.addLayer(s2)

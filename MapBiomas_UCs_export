@@ -1,0 +1,32 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var landsat8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA"),
+    imageVisParam = {"opacity":1,"bands":["B6","B5","B4"],"min":0.01159883663058281,"max":0.8491635322570801,"gamma":1},
+    imageVisParam2 = {"opacity":1,"bands":["B6","B5","B4"],"gamma":1},
+    SRTM = ee.Image("USGS/SRTMGL1_003"),
+    imageCollection = ee.ImageCollection("users/yuri/mapbiomas_v3"),
+    mapbiomas = ee.ImageCollection("users/yuri/mapbiomas_v3"),
+    limitao = /* color: #98ff00 */ee.Geometry.Polygon(
+        [[[-17.55640724305283, 4.883802256560662],
+          [-53.41578224305283, 7.330582743173216],
+          [-78.72828224305283, 5.758911940567261],
+          [-81.01343849305283, -31.979435475696814],
+          [-67.82984474305283, -41.40092728703427],
+          [-4.372813493052831, -43.0923684763917],
+          [-12.107188493052831, 4.007549035982946]]]),
+    imageVisParam3 = {"opacity":1,"bands":["classification_2017"],"min":3,"max":33,"palette":["ff0000","0013ff"]},
+    imageCollection2 = ee.ImageCollection("users/yuri/mapbiomas_v3");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var map2017 = ee.ImageCollection(mapbiomas)
+  .select('classification_2017')
+var UC = ee.FeatureCollection("users/yuri/ucs_2_pixel");
+var clip = map2017.first().clip(UC)
+Map.addLayer (clip, {}, 'MapBiomas')
+
+Export.image.toDrive({
+  image: clip,
+  folder: 'GEE',
+  region: limitao,
+  scale:30,
+  maxPixels: 1e11
+})
+

@@ -1,0 +1,23 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #0b4a8b */ee.Geometry.Polygon(
+        [[[-56.9366455078125, -10.795199497190147],
+          [-55.2996826171875, -11.14033992311648],
+          [-54.9371337890625, -9.47039703077735],
+          [-56.5521240234375, -9.12345307786253]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var img = ee.Image('LANDSAT/LC08/C01/T1_RT_TOA/LC08_227067_20170904');
+
+var regiao = ee.Geometry.Polygon(geometry);
+
+var treinamento = img.sample({
+  region:geometry,
+  scale: 30,
+  numPixels: 100,
+});
+
+var clusterer = ee.Clusterer.wekaCascadeKMeans(5, 15).train(treinamento);
+
+var result = img.cluster(clusterer);
+
+Map.addLayer(img, {max:0.432 , min:0.047 ,bands:'B6,B5,B4'}, 'OLI');
+Map.addLayer(result.randomVisualizer(), {}, 'clusters',1);

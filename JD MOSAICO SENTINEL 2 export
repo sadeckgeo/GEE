@@ -1,0 +1,39 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-50.95458984375, -2.723583083348385],
+          [-56.9970703125, -2.547987871471383],
+          [-57.56598520981953, -6.155136030765992],
+          [-57.28271484375, -9.102096738726443],
+          [-51.19078549096787, -8.325968112288047],
+          [-49.24072265625, -7.144498849647322],
+          [-49.463304903352196, -4.49662562970142]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// Script para baixar um mosaico de imagens Sentinel-2 de um determinado periodo,
+// é necessário criar um polígono (nome 'geometry') para delimitar a exportação
+var visParams={gamma: 1.3, min: 500, max: 7000, bands: ['B4', 'B8', 'B3']}
+var col=ee.ImageCollection('COPERNICUS/S2')
+var data1='2017-06-01'
+var data2='2017-07-30'
+//filtra as imagens pela data, local e ordena elas por quantidade de nuvens
+var s2FiltSort=col.filterBounds(geometry).filterDate(data1,data2).sort('CLOUDY_PIXEL_PERCENTAGE',false)
+print (s2FiltSort)
+// adiciona banda de data
+var s2FiltSortDate = s2FiltSort.map(function(img) {
+  // Get the date, convert to integer
+  var day = ee.Image.constant(img.date().getRelative('day', 'year').add(1))
+  img = img.addBands(day.rename('DOY').toUint16());
+  
+  return img;
+});
+//var s2FiltSortDate=s2FiltSort.map(addDateBands)
+//cria mosaico
+var s2Mosaic=s2FiltSortDate.mosaic()
+print (s2Mosaic)
+//visualiza e exporta bandas RGB e IR
+Map.addLayer(s2Mosaic,visParams,'Mosaico')
+Export.image.toCloudStorage({
+  bucket: 'geoxingu',
+  image: ee.Image(s2Mosaic).select(['B4', 'B8', 'B3','DOY']),
+  description: 'S2_Mosaic_AREA_DATA',
+  maxPixels: 436036725959
+});

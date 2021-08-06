@@ -1,0 +1,16 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    ee.Geometry.Polygon(
+        [[[-50.03909010087261, -3.948732484798243],
+          [-50.03909010087261, -4.4089303005537905],
+          [-49.45681471024761, -4.4089303005537905],
+          [-49.45681471024761, -3.948732484798243]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var image = ee.Image("JRC/GSW1_0/GlobalSurfaceWater");
+var water = image.select('max_extent').eq(1);
+var masked = water.updateMask(water);
+var fc = masked.reduceToVectors({scale: 30, geometry: geometry});
+Map.addLayer(fc, {color: 'blue'}, 'vectors');
+Map.centerObject(geometry)

@@ -1,0 +1,56 @@
+//Valores dos coeficientes (https://yceo.yale.edu/tasseled-cap-transform-landsat-8-oli);
+//Artigo de derivação dos coeficientes (https://www.tandfonline.com/doi/full/10.1080/2150704X.2014.915434?scroll=top&needAccess=true);
+
+var TCAP = function (image)
+{
+var Brightness = image.expression(
+    '(Blue * 0.3029) + (Green * 0.2786) + (Red * 0.4733) + (NIR1 * 0.5599) + (SWIR1 * 0.508) + (SWIR2 * 0.1872)',
+    {
+        Red: image.select('B4'),    
+        NIR1: image.select('B5'),    
+        Blue: image.select('B2'),
+        Green: image.select('B3'),
+        SWIR1: image.select('B6'),
+        SWIR2: image.select('B7')
+    });
+image = image.addBands(Brightness.rename('Brightness'));
+
+var Greenness = image.expression(
+    '(Blue * -0.2941) + (Green * -0.243) + (Red * -0.5424) + (NIR1 * 0.7276) + (SWIR1 * 0.0713) + (SWIR2 * -0.1608)',
+    {
+        Red: image.select('B4'),    
+        NIR1: image.select('B5'),    
+        Blue: image.select('B2'),
+        Green: image.select('B3'),
+        SWIR1: image.select('B6'),
+        SWIR2: image.select('B7')
+    });
+image = image.addBands(Greenness.rename('Greenness'));
+
+var Wetness = image.expression(
+    '(Blue * 0.1511) + (Green * 0.1973) + (Red * 0.3283) + (NIR1 * 0.3407) + (SWIR1 * -0.7117) + (SWIR2 * -0.4559)',
+    {
+        Red: image.select('B4'),    
+        NIR1: image.select('B5'),    
+        Blue: image.select('B2'),
+        Green: image.select('B3'),
+        SWIR1: image.select('B6'),
+        SWIR2: image.select('B7')
+    });
+image = image.addBands(Wetness.rename('Wetness'));
+
+return  image;
+};
+var OLI = ee.ImageCollection ('LANDSAT/LC08/C01/T2_SR')
+    .filterDate('2018-01-01', '2018-09-11')
+    .filterMetadata('CLOUD_COVER', 'less_than', 10)
+    .map(TCAP);
+
+var visParams = {bands: ['Brightness','Greenness','Wetness']};
+  
+//Mostrar no Mapa
+Map.addLayer(OLI, {bands:'B6,B5,B4'}, 'RGB', 0);
+Map.addLayer(OLI.median(), {min: 0, max: 1,bands:['Brightness'] }, 'Brightness',0);
+Map.addLayer(OLI.median(), {min: 0, max: 1,bands:['Greenness'] }, 'Greenness',0);
+Map.addLayer(OLI.median(), {min: 0, max: 1,bands:['Wetness'] }, 'Wetness',0);
+Map.addLayer(OLI.median(), visParams, 'RGB');

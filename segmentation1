@@ -1,0 +1,118 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var Zonas = ee.FeatureCollection("users/geocastellanosg/zona_cortina"),
+    arg = ee.FeatureCollection("users/geocastellanosg/Vectores/argen"),
+    jujuy = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-64.18615873936199, -24.536070433821394],
+          [-64.29464872959636, -24.968819720640298],
+          [-64.01587065342449, -25.023584881175008],
+          [-63.91012724522136, -24.59477298653628]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//Nota: Para evitar la ambigüedad, siempre especifique la escala cuando use una función que tenga un parámetro de escala.
+Map.centerObject(jujuy,10)
+
+print(Zonas);
+//Map.addLayer(Zonas,{color:'red'},'Zonas de Muestra',false );
+var Zonasselect = Zonas.filter(ee.Filter.stringContains('CLASS_NAME','Forestal'));//Seleccionar ecorregion
+print(Zonasselect)
+//Map.addLayer(Zonasselect,{color:'red'},'Zonas de Zonasselect',false );
+
+//====================================================================================================
+// Composicion "Libre de Nubes" para S2 usando la banda de calidad
+function mascaradenube(imagen){
+  var Qa = imagen.select('QA60');
+//los bits 10 y 11 corresponden a nube y cirrus respectivamente
+  var nube = 1 << 10;
+  var cirrus = 1 << 11;
+//los marcadores(nube, cirrus) deben ser seteados en 0.
+  var mascara = Qa.bitwiseAnd(nube).eq(0).and(Qa.bitwiseAnd(cirrus).eq(0));
+//debuelve los datos enmascarados y reescalados, sin la banda de Qa.
+  return imagen.updateMask(mascara).divide(10000)
+    .select("B.*")
+    .copyProperties(imagen,['system:time_start']);
+}
+var S2 = ee.ImageCollection('COPERNICUS/S2')
+    .filterDate('2017-01-01', '2018-01-01')
+    .filterBounds(jujuy)
+    // Pre-filter to get less cloudy granules.
+    .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 5))
+    .map(mascaradenube);
+    
+print(S2);
+//Map.addLayer(S2,{bands:['B8','B4','B3'],min:0,max:0.4 },'S2_masqued',false);
+var composite = S2.median();
+//Map.addLayer(composite,{bands:['B8','B4','B3'],min:0,max:0.4 },'S2_composite',false);
+print(composite);
+var S2_cliped = S2.map(function(imagen) {return imagen.clip(jujuy)}) 
+var composite_clip = composite.clip(jujuy)
+
+
+//-----------------Agregar NDVI como banda a la composicion----------------------------------------
+composite_clip = composite_clip.addBands(composite_clip.normalizedDifference(['B8', 'B4']).rename('NDVI')); 
+Map.addLayer(composite_clip,{bands:['B8','B4','B3'],min:0,max:0.4 },'S2_composite_clip');
+//====================================================================================================
+print(composite_clip,'composite');
+
+function erode(img, distance) {
+  var d = (img.not().unmask(1)
+       .fastDistanceTransform(30).sqrt()
+       .multiply(ee.Image.pixelArea().sqrt()))
+  return img.updateMask(d.gt(distance))
+}
+
+function dilate(img, distance) {
+  var d = (img.fastDistanceTransform(30).sqrt()
+       .multiply(ee.Image.pixelArea().sqrt()))
+  return d.lt(distance)
+}
+
+function expandSeeds(seeds) {
+  seeds = seeds.unmask(0).focal_max()
+  return seeds.updateMask(seeds)
+}
+//====================================================================================================
+var seeds = ee.Algorithms.Image.Segmentation.seedGrid(10);
+print(seeds,'seeds')
+Map.addLayer(seeds,{},'seeds',false);
+
+var NDVI = composite_clip.select('NDVI')
+
+// Run KMeans without grid 
+var KMeans = ee.Algorithms.Image.Segmentation.KMeans({
+  image: composite_clip, 
+  numClusters:5,
+  numIterations:100,
+  //gridSize:60,
+  forceConvergence: false,
+  neighborhoodSize:30,
+})//.select(['B8_mean', 'B4_mean', 'B3_mean','B2_mean', 'NDVI_mean','clusters'],['NIR', 'R', 'G','B', 'NDVI','clusters'])
+print(KMeans,'KMeans' )
+var clusters_Kmeans = KMeans.select('clusters')
+Map.addLayer(clusters_Kmeans.randomVisualizer(), {}, 'clusters_Kmeans',false);
+
+// Run GMeans without grid 
+var GMeans = ee.Algorithms.Image.Segmentation.GMeans({
+  image: composite_clip, 
+  numIterations:100,
+  pValue: 50,
+  //gridSize:30,
+    neighborhoodSize:30,
+})
+print(GMeans,'GMeans' )
+var clusters_Gmeans = GMeans.select('clusters')
+Map.addLayer(clusters_Gmeans.randomVisualizer(), {}, 'clusters_gmeans',false);
+
+// Run SNIC without grid 
+var SNIC = ee.Algorithms.Image.Segmentation.SNIC({
+  image: composite_clip, 
+  size: 50, 
+  compactness: 1}).select('clusters')
+
+print(SNIC,'SNIC' )
+//var clusters_SNIC = GMeans.select('clusters')
+Map.addLayer(SNIC.randomVisualizer(), {}, 'SNIC');
+
+
+
+
+
+

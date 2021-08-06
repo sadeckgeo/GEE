@@ -1,0 +1,22 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-62.490234375, -19.31114335506464],
+          [-49.39453125, -19.476950206488414],
+          [-49.04296875, -7.188100871179019],
+          [-63.193359375, -7.27529233637217]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//carregar uma ImageCollection
+  var MT = ee.ImageCollection('COPERNICUS/S1_GRD').filterBounds(geometry)
+ .filterDate('2017-09-01' ,'2017-09-30')
+ .filter(ee.Filter.eq('instrumentMode', 'IW'))
+ .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VV'))
+ .filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
+ .filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
+ .select(['VV','VH'])
+ .mean() 
+ MT = MT.addBands(MT.select('VV').divide(MT.select('VH'))).rename(['VV','VH','ratio']);
+ 
+
+  
+Map.addLayer(MT, {'min':[-25,-30,0.2],'max':[3, -2, 1], 'gamma':0.6}, 'rVV-gVH-bRATIO' );
+Map.centerObject(geometry)

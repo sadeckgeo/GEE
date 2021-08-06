@@ -1,0 +1,31 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-65.15294471945438, -8.239758540815597],
+          [-65.15294471945438, -9.92123476467467],
+          [-63.53246132101689, -9.92123476467467],
+          [-63.53246132101689, -8.239758540815597]]], null, false),
+    imageCollection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA"),
+    imageVisParam = {"opacity":1,"bands":["B5","B4","B3"],"min":0.005217169411480427,"max":0.6945478916168213,"gamma":1},
+    imageVisParam2 = {"opacity":1,"bands":["B6","B5","B4"],"min":0.0034773563966155052,"max":0.946044921875,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var l8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+    .filterDate('2021-06-01', '2021-06-26')
+    .filterMetadata('CLOUD_COVER', 'less_than', 80)
+    .filterBounds(geometry);
+    
+Map.addLayer(l8,imageVisParam2,'L8')
+
+var l5_2001 = ee.ImageCollection(ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA"))
+    .filterDate('2013-06-01', '2013-07-30')
+    .filterMetadata('CLOUD_COVER', 'less_than', 90)
+    .filterBounds(geometry)
+    
+Map.addLayer(l5_2001,imageVisParam,'l5_2001')

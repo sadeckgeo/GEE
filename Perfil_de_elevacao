@@ -1,0 +1,57 @@
+var reno = [-52.51739501953125,-3.4037578795775882];
+var sf = [-51.26495361328125,-3.3790819323419705];
+var transect = ee.Geometry.LineString([reno, sf]);
+
+var elevation = ee.Image('USGS/SRTMGL1_003');  // Extract the elevation profile.
+var startingPoint = ee.FeatureCollection(ee.Geometry.Point(sf));
+var distance = startingPoint.distance(500000);
+var image = distance.addBands(elevation);
+
+// Extract band values along the transect line.
+var array = image.reduceRegion(ee.Reducer.toList(), transect, 1000)
+                 .toArray(image.bandNames());
+
+// Sort points along the transect by their distance from the starting point.
+var distances = array.slice(0, 0, 1);
+array = array.sort(distances);
+
+// Create arrays for charting.
+var elevationAndTemp = array.slice(0, 1);  // For the Y axis.
+// Project distance slice to create a 1-D array for x-axis values.
+var distance = array.slice(0, 0, 1).project([1]);
+
+// Generate and style the chart.
+var chart = ui.Chart.array.values(elevationAndTemp, 1, distance)
+    .setChartType('LineChart')
+    .setSeriesNames(['Elevation'])
+    .setOptions({
+      title: 'Elevation and temperatures along SF-to-Reno transect',
+      vAxes: {
+        0: {
+          title: 'Average seasonal temperature (Celsius)'
+        },
+        1: {
+          title: 'Elevation (meters)',
+          baselineColor: 'transparent'
+        }
+      },
+      hAxis: {
+        title: 'Distance from SF (m)'
+      },
+      interpolateNulls: true,
+      pointSize: 0,
+      lineWidth: 1,
+      // Our chart has two Y axes: one for temperature and one for elevation.
+      // The Visualization API allows us to assign each series to a specific
+      // Y axis, which we do here:
+      series: {
+        0: {targetAxisIndex: 1},
+        1: {targetAxisIndex: 0},
+        2: {targetAxisIndex: 0}
+      }
+    });
+
+print(chart);
+
+Map.addLayer(elevation, {min: 4000, max: 0});
+Map.addLayer(transect, {color: 'FF0000'});

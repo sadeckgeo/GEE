@@ -1,0 +1,1062 @@
+var settings =  require("users/leolaipelt/ssebop:settings");
+var cloudUtils =  require("users/leolaipelt/ssebop:cloud");
+
+var ETaPalette = ['DEC29B', 'E6CDA1', 'EDD9A6', 'F5E4A9', 'FFF4AD', 'C3E683', '6BCC5C', '3BB369', '20998F', '1C8691', '16678A', '114982', '0B2C7A'];
+var TsPalette = ["ffffb2", "ffe98c", "ffd265", "feb751", "fe9b43", "fb7b35", "f55629", "eb3420", "d41a23", "bd0026"]
+var VIPalette = ['d7191c', 'fdae61', 'ffffc0', 'a6d96a', '1a9641']
+ 
+var cFactorCollection = ee.FeatureCollection("users/areasirrigadas/Tcorr/BRASIL_2013_2017_xavier_L8");
+var kFactorCollection = ee.FeatureCollection("users/areasirrigadas/KFactor/BRASIL_2014_2018_gldas");
+
+var debug = true;
+
+var dTTypes = new Object({
+  clearsky: "CLEARSKY",
+  average: "AVERAGE",
+})
+
+var cFactorFields = {
+  0: "M_MA", //Tcorr_(mean)_median | Mean - 0 * Std
+  1: "M-1STD_MA", //Tcorr_(mean-1std)_median | Mean - 1 * Std
+  2: "M-2STD_MA" //Tcorr_(mean-2std)_median | Mean - 2 * Std
+}
+
+var reference_crops = new Object({
+  grass: "GRASS",
+  alfalfa: "ALFALFA"
+})
+
+function GREEN_func(image){
+  var green = ee.Algorithms.If(ee.List(["LANDSAT_5", "LANDSAT_7"]).containsAll([image.get('SPACECRAFT_ID')]),
+        image.select(['B2'], ["GREEN"]),
+        ee.Algorithms.If(ee.List(["LANDSAT_8"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.select(['B3'], ["GREEN"]),
+          ee.Algorithms.If(ee.List(["Sentinel-2A", "Sentinel-2B"]).containsAll([image.get('SPACECRAFT_NAME')]),
+            image.select(['B3'], ["GREEN"]),
+            ee.Image(0).rename("GREEN"))))
+  return green
+}
+
+function RED_func(image){
+  var red = ee.Algorithms.If(ee.List(["LANDSAT_5", "LANDSAT_7"]).containsAll([image.get('SPACECRAFT_ID')]),
+        image.select(['B3'], ["RED"]),
+        ee.Algorithms.If(ee.List(["LANDSAT_8"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.select(['B4'], ["RED"]),
+          ee.Algorithms.If(ee.List(["Sentinel-2A", "Sentinel-2B"]).containsAll([image.get('SPACECRAFT_NAME')]),
+            image.select(['B4'], ["RED"]),
+            ee.Image(0).rename("RED"))))
+  return ee.Image(red)
+}
+
+function NIR_func(image){
+  var nir = ee.Algorithms.If(ee.List(["LANDSAT_5", "LANDSAT_7"]).containsAll([image.get('SPACECRAFT_ID')]),
+        image.select(['B4'], ["NIR"]),
+        ee.Algorithms.If(ee.List(["LANDSAT_8"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.select(['B5'], ["NIR"]),
+          ee.Algorithms.If(ee.List(["Sentinel-2A", "Sentinel-2B"]).containsAll([image.get('SPACECRAFT_NAME')]),
+            image.select(['B8'], ["NIR"]),
+            ee.Image(0).rename("NIR"))))
+  return nir
+}
+
+function SWIR1_func(image){
+  var swir1 = ee.Algorithms.If(ee.List(["LANDSAT_5", "LANDSAT_7"]).containsAll([image.get('SPACECRAFT_ID')]),
+        image.select(['B5'], ["SWIR1"]),
+        ee.Algorithms.If(ee.List(["LANDSAT_8"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.select(['B6'], ["SWIR1"]),
+          ee.Algorithms.If(ee.List(["Sentinel-2A", "Sentinel-2B"]).containsAll([image.get('SPACECRAFT_NAME')]),
+            image.select(['B11'], ["SWIR1"]),
+            ee.Image(0).rename("SWIR1"))))
+  return swir1
+}
+
+// Calculate NDVI index
+function NDVI_func(image){
+  var red = RED_func(image)
+  var nir = NIR_func(image)
+  var ndvi = image.expression(
+    '(NIR - RED) / (NIR + RED)', 
+    {'RED' : red, 'NIR': nir}).rename("NDVI")
+  return ndvi
+}
+
+// Calculate NDWI index
+function MNDWI_func(image){
+  var green = GREEN_func(image)
+  var swir1 = SWIR1_func(image)
+  var mndwi = image.expression(
+    '(GREEN - SWIR1) / (GREEN + SWIR1)', 
+    {'GREEN' : green, 'SWIR1': swir1}).rename("MNDWI")
+  return mndwi
+}
+
+// Calculate NDWI index
+function EVI2_func(image){
+  var red = RED_func(image)
+  var nir = NIR_func(image)
+  var evi2 = image.expression(
+    '2.5 * ((NIR - RED) / (NIR + (2.4 * RED) + 1))',
+    {'RED' : red, 'NIR': nir}).rename("EVI2")
+  return evi2
+}
+
+// Calculate Thermal band
+function tir_func(image){
+  var tir = ee.Image(ee.Algorithms.If(ee.List(["LANDSAT_5"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.select(['B6'], ["TIR"]),
+          ee.Algorithms.If(ee.List(["LANDSAT_7"]).containsAll([image.get('SPACECRAFT_ID')]),
+            image.select(['B6_VCID_2'], ["TIR"]),
+            ee.Algorithms.If(ee.List(["LANDSAT_8"]).containsAll([image.get('SPACECRAFT_ID')]),
+              image.select(['B10'], ["TIR"]),
+              ee.Image(0).rename("TIR"))
+            )
+          ))
+  return tir
+}
+
+// Calculate Elevation (Meters)
+function elev_func(){
+  var elev = ee.Image("USGS/SRTMGL1_003")
+    .rename("ELEVATION");
+  return elev
+}
+
+// Calculate Latitude
+function lat_func(){
+  var Lat = ee.Image.pixelLonLat().select(['latitude']).multiply(Math.PI/180).rename("LATITUDE");
+  return Lat
+}
+
+// Calculate Atmospheric Pressure (Allen et al, 1998)
+function pair_func(){
+  var elev = elev_func()
+  var pair = ee.Image(0).expression(
+    '101.3 * pow((293 - 0.0065 * z) / 293, 5.26)', // Eq.7 (Allen et al, 1998) 
+    {'z': elev}
+  ).rename("ATMOSPHERIC_PRESSURE");
+  return pair
+}
+
+// Convert Kelvin to Celcius
+function k_to_c_func(image){
+  return image.subtract(273.15)
+}
+
+function getCollection(dataset, imageCollection, variables, cadence){
+  /*
+  cadence (integer): hours
+  */
+
+  var join = ee.Join.saveAll({
+    matchesKey: 'images'
+  });
+  
+  var joinConditional = ee.Filter.maxDifference({
+    difference: 1000 * 60 * 60 * cadence,
+    leftField: dataset.timeend_field, 
+    rightField: dataset.timeend_field, 
+  });
+  
+  var imageCollectionJoin = join.apply({
+    primary: imageCollection, 
+    secondary: imageCollection, 
+    condition: joinConditional
+  });
+
+  var imageCollectionCadenced = ee.ImageCollection(imageCollectionJoin
+    .map(function(image) {
+      var imageCollectionJoined = ee.ImageCollection.fromImages(image.get('images'))
+        .filterMetadata(dataset.timeend_field, "less_than", image.get(dataset.timeend_field))
+        .merge(ee.ImageCollection([image]))
+        
+      var image = ee.Image(image);
+      
+      var variables_names = []
+      variables.forEach(function(variable){
+        variables_names.push(variable.name)
+        var variable_dataset = variable.datasets[dataset.code]
+        var variable_band = imageCollectionJoined.reduce(variable_dataset.units.reducer)
+          .expression(variable_dataset.units.expression, variable_dataset.units.expression_args)
+          .rename(variable.name)
+        image = image.addBands(variable_band)
+      })
+      
+      var start_date = ee.Date(image.get(dataset.timestart_field))
+      var end_date = ee.Date(image.get(dataset.timeend_field))
+  
+      return ee.Image(image.select(variables_names))
+        .set("images", imageCollectionJoined.toList(100))
+        .set("start_hour", ee.Number.parse(start_date.format("H")))
+        .set("start_minute", ee.Number.parse(start_date.format("mm")))
+        .set("end_hour", ee.Number.parse(end_date.format("H")))
+        .set("end_minute", ee.Number.parse(end_date.format("mm")))
+    }));
+
+  return imageCollectionCadenced
+}
+
+
+
+
+
+
+// Calculate Meteorological Variables
+function meteorological_variables_func(dataset, date){
+  var doy = ee.Number.parse(date.format("D"));
+  var dateRange = date.getRange("day");
+  
+  if(dataset === settings.datasets.xavier || dataset === settings.datasets.historical_xavier){
+    var xavierCollection = ee.ImageCollection(settings.datasets.xavier.path)
+    .filter(ee.Filter.date(dateRange.start(), dateRange.end()));
+      
+    xavierCollection = getCollection(settings.datasets.xavier, xavierCollection, 
+      [settings.meteorological.temperature_max, 
+       settings.meteorological.temperature_min, 
+       settings.meteorological.wind_speed,
+      // settings.meteorological.relative_humidity,
+       settings.meteorological.evapotranspiration], 23.9 // 24h
+    ).filterMetadata("end_hour", "equals", 0)
+
+    var historicalXavierCollection = ee.ImageCollection(settings.datasets.historical_xavier.path)
+      .filterMetadata("doy", "equals", doy);
+      
+    historicalXavierCollection = getCollection(settings.datasets.historical_xavier, historicalXavierCollection, 
+      [settings.meteorological.temperature_max, 
+       settings.meteorological.temperature_min, 
+       settings.meteorological.wind_speed,
+      // settings.meteorological.relative_humidity,
+       settings.meteorological.evapotranspiration], 23.9 // 24h
+    ).filterMetadata("end_hour", "equals", 0)
+    
+    var meteorologicalsCollection = ee.ImageCollection(ee.Algorithms.If(
+        dataset === settings.datasets.historical_xavier,
+        historicalXavierCollection,
+        ee.Algorithms.If(
+          date.millis().gt(ee.Date("2017-07-31").millis()).or(date.millis().lt(ee.Date("1990-01-01").millis())), 
+          historicalXavierCollection, 
+          xavierCollection
+        )
+    ))
+      
+  }else{
+    var meteorologicalsCollection = ee.ImageCollection(dataset.path)
+    .filter(ee.Filter.date(dateRange.start(), dateRange.end()));
+    
+    meteorologicalsCollection = getCollection(dataset, meteorologicalsCollection, 
+      [settings.meteorological.temperature_max, 
+       settings.meteorological.temperature_min, 
+       settings.meteorological.wind_speed,
+       // settings.meteorological.relative_humidity,
+       settings.meteorological.evapotranspiration], 23.9 // 24h
+    ).filterMetadata("end_hour", "equals", 0);
+    
+  }
+
+  var meteorologicalData = ee.Image(meteorologicalsCollection.first()).resample("bilinear");
+ 
+  return meteorologicalData
+}
+
+
+function date_to_band_index(date, initial_date){
+  var date = ee.Date(date);
+  var initial_date = ee.Date(initial_date);
+  var index = date.difference(initial_date, "day");
+  return index
+}
+
+// Vapor Pressure in kPa with temperature in K (Output in C)
+function vapor_pressure_func(temperature){
+  var eT = ee.Image(0).expression(
+    '0.6108 * exp((17.27 * T) / (T + 237.3))',  // Eq.11 (Allen et al, 1988)
+    {'T':k_to_c_func(temperature)}
+  );  
+  return eT
+}
+
+// Vapor Pressure in kPa with temperature in K
+function mean_saturation_vapor_pressure_func(Tmax, Tmin){
+  var es = ee.Image(0).expression(
+    '(eT_Tmax + eT_Tmin) / 2',  // Eq.12 (Allen et al, 1988)
+    {'eT_Tmax': vapor_pressure_func(Tmax), 'eT_Tmin': vapor_pressure_func(Tmin)}
+  );  
+  return es
+}
+
+function containsAll(list, elements){
+  return elements.filter(function(value){return value in list}).length == elements.length
+}
+
+// Actual Vapor Pressure != Eq.A14(Senay, 2018) MUDANÇA!!!
+function actual_vapor_pressure_func(parameters){
+  if(containsAll(parameters, ["Tdew"])){
+    var ea = vapor_pressure_func(parameters["Tdew"]) // Eq.14 (Allen et al, 1988)
+    return ea
+  }else if(containsAll(parameters, ["Tmin", "Tmax", "RHmin", "RHmax"])){
+    var ea = ee.Image(0).expression(
+      '(eT_Tmin * (RHmax/100) + eT_Tmax * (RH_min/100)) / 2', // Eq.17 (Allen et al, 1988)
+      {'eT_Tmax': vapor_pressure_func(parameters["Tmax"]), 'eT_Tmin': vapor_pressure_func(parameters["Tmax"]), 'RHmax': parameters["RHmax"],'RHmin': parameters["RHmin"]}
+    )
+    return ea
+  }else if(containsAll(parameters, ["Tmin", "RHmax"])){
+    var ea = ee.Image(0).expression(
+      'eT_Tmin * (RHmax/100)', // Eq.18 (Allen et al, 1988)
+      {'eT_Tmin': vapor_pressure_func(parameters["Tmax"]), 'RHmax': parameters["RHmax"]}
+    )
+    return ea
+  }else if(containsAll(parameters, ["Tmin", "Tmax", "RHmean"])){
+    var ea = ee.Image(0).expression(
+      '(RHmean/100) + ((eT_Tmax + eT_Tmin)/2)', // Eq.19 (Allen et al, 1988)
+      {'eT_Tmax': vapor_pressure_func(parameters["Tmax"]), 'eT_Tmin': vapor_pressure_func(parameters["Tmin"]), 'RHmean': parameters["RHmean"]}
+    )
+    return ea
+  }else if(containsAll(parameters, ["Tmin"])){
+    var ea = ee.Image(0).expression(
+      '0.611 * exp((17.27 * Tmin) / (Tmin + 237.3))', // Eq.48 (Allen et al, 1988) *********** Voltando para o Allen o valor de ETo aumentou****************************
+      // 'exp((17.27 * Tmin) / (Tmin + 237.3))', // Eq.A14 (Senay et al, 2018)
+      {'Tmin': k_to_c_func(parameters["Tmin"])}
+    )
+    return ea
+  }
+}
+
+//Calculate emissivity from NDVI (Sobrino et al, 2004)
+function emiss_func(image){
+  image = ee.Image(image)
+  var ndvi = NDVI_func(image)
+  
+  var Pv = ee.Image(0).expression(
+    '((ndvi - ndvi_min)/(ndvi_max - ndvi_min))**2', // Eq.9 (Sobrino et al, 2004).
+    {'ndvi':ndvi, 'ndvi_max': 0.5, 'ndvi_min': 0.2}); 
+    
+  var Es = 0.977 // Soil Emissivity, 0.97 in Sobrino et al, 2004.
+  var Ev = 0.99  // Veg Emissivity, 0.99 in Sobrino et al, 2004.
+  var F = 0.55   // Shape Factor (Sobrino et al, 1990) mean value of 0.553
+  
+  var dE = ee.Image(0).expression(
+    '((1-Es)*(1-Pv))*(F * Ev)', // Eq.10 (Sobrino et al, 2004).
+    {'Pv':Pv, 'Es': Es,'F': F, 'Ev': Ev}); 
+  
+  var RangeEmiss = ee.Image(0).expression(
+    '((Ev*Pv)+(Es *(1-Pv))+dE)', // Eq.8 (Sobrino et al, 2004).
+    {'Pv':Pv, 'dE':dE, 'Ev': Ev, 'Es': Es});
+
+  // Eq.8 (Sobrino et al, 2004). Adapted to Brazil
+  var emissivity = ndvi
+    .where(ndvi.lt(0),0.985)
+    .where(ndvi.gte(0).and(ndvi.lt(0.2)),0.977)
+    .where(ndvi.gt(0.85),0.99)
+    .where(ndvi.gte(0.2).and(ndvi.lte(0.85)),RangeEmiss)
+
+  return emissivity.clamp(Es,Ev).rename("emiss");
+}
+
+//calculate Surface Temperature (Allen et al, 2007)
+function Ts_func(image){
+  image = ee.Image(image)
+  var ts_brightness = tir_func(image)
+  var emissivity = emiss_func(image)
+  var k1 = ee.Number.parse(ee.Algorithms.If(ee.List(["LANDSAT_5"]).containsAll([image.get('SPACECRAFT_ID')]),
+        image.get("K1_CONSTANT_BAND_6"),
+        ee.Algorithms.If(ee.List(["LANDSAT_7"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.get("K1_CONSTANT_BAND_6_VCID_2"),
+          ee.Algorithms.If(ee.List(["LANDSAT_8"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.get("K1_CONSTANT_BAND_10"),
+          607.76))))
+
+  var k2 = ee.Number.parse(ee.Algorithms.If(ee.List(["LANDSAT_5"]).containsAll([image.get('SPACECRAFT_ID')]),
+        image.get("K2_CONSTANT_BAND_6"),
+        ee.Algorithms.If(ee.List(["LANDSAT_7"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.get("K2_CONSTANT_BAND_6_VCID_2"),
+          ee.Algorithms.If(ee.List(["LANDSAT_8"]).containsAll([image.get('SPACECRAFT_ID')]),
+          image.get("K2_CONSTANT_BAND_10"),
+          1260.56))));
+  
+  // First back out radiance from brightness temperature
+  // Then recalculate emissivity corrected Ts 
+  var thermal_rad_toa = ee.Image(0).expression(
+    'k1 / (exp(k2 / ts_brightness) - 1)', //
+    {"ts_brightness":ts_brightness, "k1":k1, "k2":k2});
+    
+  var Rp   = 0.91;  // Path radiance in the 10.4-12.5 um band 0.91 in Allen et al 2007
+  var tNB= 0.866;  // Narrow band transmissivity of air 0.866 in (Allen et al, 2007)
+  var Rsky= 1.32;  // Narrow band downward thermal radiance 1.31 in Allen et al 2007
+  
+  var rc = ee.Image(0).expression(
+    '((thermal_rad_toa - Rp) / tNB) - ((1 - emiss) * Rsky)', // Eq.21 (Allen et al, 2007)
+    {"thermal_rad_toa":thermal_rad_toa, "emiss":emissivity, "Rp": Rp, "tNB":tNB, "Rsky":Rsky});
+  var Ts = ee.Image(0).expression(
+    'k2 / log(eNB * k1 / rc + 1)', // Eq.20 (Allen et al, 2007)
+    {"eNB":emissivity, "rc":rc, "k1":k1, "k2":k2}).rename("Ts");
+   
+  return Ts; 
+}
+
+// Calculate Extraterrestrial Radiation
+function extraterrestrial_radiation(doy){
+  // Solar declination
+  var Sd = ee.Image(0).expression(
+    "0.40928 * sin( (((2 * pi) / 365) * J) - 1.39 )", // Eq.24 (Allen et al, 1988)
+    {'J': doy, 'pi': Math.PI}
+  );
+  
+  // Latitude
+  var lat = lat_func()
+  
+  // Sunset hour angle
+  var Ws = ee.Image(0).expression(
+    'acos(-tan(Lat) * tan(Sd))', // Eq.25 (Allen et al, 1988)
+    {'Lat':lat, 'Sd':Sd}
+  );
+ 
+  var Raa = ee.Image(0).expression(
+    'Ws * sin(Lat) * sin(Sd) + cos(Lat) * cos(Sd) * sin(Ws)', // Eq.21 (Allen et al, 1988)
+    {'Ws':Ws, 'Lat':lat, 'Sd':Sd}
+  );
+  
+  // Inverse relative distance Earth-Sun 
+  var Dr = ee.Image(0).expression(
+    '1 + (0.033 * cos((2 * pi/365) * J) )', // Eq.23 (Allen et al, 1988)
+    {'J': doy, 'pi': Math.PI}
+  );
+  
+  // Solar constant
+  var Gsc = 0.0820 // MJ/m^2/min Eq.21 (Allen et al, 1988)
+  
+
+  Map.addLayer(Sd, {min: 0.3748, max: 0.3748}, "Sd", false)
+  Map.addLayer(lat, {}, "lat", false)
+  Map.addLayer(Ws, {min: 1.4708, max: 1.4849}, "Ws", false)
+  Map.addLayer(Raa, {min: 0.7650, max: 0.7901}, "Raa", false) 
+  Map.addLayer(Dr, {min: 0.9726, max:0.972}, "Dr", false)
+ 
+  
+  // Extraterrestrial radiation
+  var Ra = ee.Image(0).expression(
+    '((20 * 60) / pi) * Gsc * Dr * Raa', // Eq.21 (Allen et al, 1988) MUDANÇA!!!
+    {'pi':Math.PI,'Gsc': Gsc, 'Dr':Dr, 'Raa':Raa}
+  );
+  return Ra
+}
+
+// Net radiation (Rn)
+function net_radiation_func(parameters){
+  var doy = parameters["doy"]
+  var Tmax = parameters["Tmax"]
+  var Tmin = parameters["Tmin"]
+  var RHmean = parameters["RHmean"]
+
+  var Ra = extraterrestrial_radiation(doy)
+  var elev = elev_func()
+  
+  // Actual vapor pressure
+  if(RHmean !== undefined){
+    var ea = actual_vapor_pressure_func({"Tmax": Tmax, "Tmin": Tmin, "RHmean": RHmean})
+  }else{
+    var ea = actual_vapor_pressure_func({"Tmin": Tmin})
+  }
+  
+  // This is the full clear sky solar formulation
+  
+  // var pair = pair_func();
+  // var lat  = lat_func();
+  
+  // // sin of the angle of the sun above the horizon (D.5 and Eqn 62)
+  // var sin_beta_24 = ee.Image().expression(
+  //   'sin(0.85 + 0.3 * lat * sin(delta) - 0.42 * lat ** 2)',
+  //   {'lat':lat, 'delta':ee.Image.constant(doy.multiply(2 * Math.PI / 365).subtract(1.39435))});
+  // // Precipitable water (Eqn D.3)
+  // var w = ee.Image().expression(
+  //   '0.14 * ea * pair + 2.1', 
+  //   {'pair':pair, 'ea':ea}
+  // );
+  // // Clearness index for direct beam radiation (Eqn D.2)
+  // // Limit sin_beta >= 0.01 so that KB does not go undefined
+  // var kb = ee.Image().expression(
+  //   '0.98 * exp((-0.00146 * pair) / (kt * sin_beta) - 0.075 * pow((w / sin_beta), 0.4))',
+  //   {'pair':pair, 'kt':1.0, 'sin_beta':sin_beta_24.max(0.01), 'w':w}
+  // );
+  // // Transmissivity index for diffuse radiation (Eqn D.4)
+  // var kd = kb.multiply(-0.36).add(0.35)
+  //   .min(kb.multiply(0.82).add(0.18));
+  
+  // var Rso = Ra.multiply(kb.add(kd));
+  
+  // end
+
+  // Simplified clear sky solar formulation (Eqn 37)
+    var Rso = ee.Image(0).expression(
+      '(0.75 + 2E-5 * z) * Ra', // Eq.37 (Allen et al, 1988)
+      {'z':elev, 'Ra':Ra}
+    );
+    
+  // end
+  
+  // Albedo for reference crops(grass and alfalfa)
+  var a = 0.23 // p.23 (Allen et al, 1988)
+  
+  //adjustment coefficient
+  var kRs = 0.175  // p.60 (Allen et al, 1988)
+  
+  // Shortwave radiation (Calculated without n/N)
+  var Rs = ee.Image(0).expression(
+    'kRs * sqrt((Tmax - Tmin)) * Ra',// Eq.50 (Allen et al, 1988)
+    {'Tmax': k_to_c_func(Tmax), 'Tmin': k_to_c_func(Tmin), 'Ra': Ra, 'kRs': kRs}
+  )
+  
+  // Net shortwave radiation 
+  var Rns = ee.Image(0).expression(
+    '(1 - a) * Rs', // Eq.38 (Allen et al, 1988)
+    {'Rs': Rs, 'a': a}
+  );
+  
+  //Stefan-Boltzmann constant
+  var o = 4.901E-9 // p.52 (Allen et al, 1988)
+  
+  // Net longwave radiation
+
+  var Rnl = ee.Image(0).expression(
+    'o * ((Tmax ** 4 + Tmin ** 4)/2.0) * (0.34 - 0.14 * sqrt(ea)) * (1.35 * (Rs/Rso) - 0.35)', // Eq.39 (Allen et al, 1988) MUDANÇA em Rs/Rso !!!
+    {'o': o, 'Tmax':Tmax, 'Tmin':Tmin, 'ea':ea, 'Rs': Rs, 'Rso': Rso}
+  );
+  
+ 
+ 
+  Map.addLayer(Rso, {min: 17.5918, max: 18.5377}, "Rso", false)
+  Map.addLayer(Rs, {min: 11.62, max: 17.18}, "Rs", false)
+  Map.addLayer(Rns, {min: 8.9495, max: 13.2349}, "Rns", false)
+  Map.addLayer(Rnl, {min: 2.62, max: 5.34}, "Rnl", false)
+  Map.addLayer(ea, {min: 1.6179, max: 2.6609}, "ea", false)
+  
+  
+  // Net radiation
+  var Rn = ee.Image(0).expression(
+    'Rns - Rnl', // Eq.40 (Allen et al, 1988)
+    {'Rns': Rns, 'Rnl': Rnl}
+  )
+  return Rn
+}
+
+function ET_func(dataset, date, roi, Cn, Cd){
+  var doy = ee.Number.parse(date.format("D"))
+  var dateRange = date.getRange("day")
+  var meteorologicalData = meteorological_variables_func(dataset, date)
+  
+  var Tmax  = meteorologicalData.select(['TEMPERATURE_MAX'], ["Tmax"]).clip(roi);
+  var Tmin  = meteorologicalData.select(['TEMPERATURE_MIN'], ["Tmin"]).clip(roi);
+  // var RHmean  = meteorologicalData.select(['RELATIVE_HUMIDITY'], ["RHmean"]).clip(roi);
+  var u2 = meteorologicalData.select(['WIND_SPEED'], ["u2"]).clip(roi);
+
+  var pair = ee.Image(pair_func()).clip(roi)
+  
+  var Tmean = ee.Image(0).expression(
+    "(Tmax + Tmin)/2", // Eq.9 (Allen et al, 1998)
+    {'Tmax': Tmax, 'Tmin': Tmin}
+  );
+  
+  var slope = ee.Image(0).expression(
+    '(4098 * eT) / ((T + 237.3) ** 2)', // Eq.13 (Allen et al, 1998)
+    {'eT': vapor_pressure_func(Tmean), 'T': k_to_c_func(Tmean)}
+  );
+  
+  var psy = ee.Image(0).expression(
+    "0.000665 * P", // Eq.8 (Allen et al, 1998) 
+    {'P': pair}
+  );
+
+  var es = mean_saturation_vapor_pressure_func(Tmax, Tmin);
+  
+  var ea = actual_vapor_pressure_func({"Tmin": Tmin});
+  // var ea = actual_vapor_pressure_func({"Tmin": Tmin, "Tmax": Tmax, "RHmean": RHmean}) // MUDANÇA !!!
+  
+  // Vapour pressure deficit
+  var es_ea = ee.Image(0).expression(
+    'es - ea', // Box.7, p.40 (Allen et al, 1998) 
+    {'es': es, 'ea': ea}
+  ).max(0);
+  
+  var Rn = net_radiation_func({'doy': doy, "Tmin": Tmin, "Tmax": Tmax});
+
+  var ET = ee.Image(0).expression(
+    '(0.408 * slope * (Rn - G) + psy * (Cn/(T+273)) * u2 * es_ea )/' + 
+    '(slope + psy * (1 + Cd * u2))', // Eq.6 (Allen et al, 1998)
+    {'slope': slope, 'Rn': Rn, 'G': 0, 'psy': psy, 'T': k_to_c_func(Tmean), 'u2': u2, 'es_ea': es_ea, 'Cn': Cn, 'Cd': Cd}
+  );  
+  
+  if(debug){
+    // Map.addLayer(Rn, {}, "Rn", false)
+    // Map.addLayer(slope, {}, "Slope", false)
+    // Map.addLayer(psy, {}, "psy", false)
+    // Map.addLayer(k_to_c_func(Tmean), {}, "Tmean", false)
+    // Map.addLayer(u2, {}, "u2", false)
+    // Map.addLayer(es_ea, {}, "es_ea", false)
+    // Map.addLayer(ee.Image(rs_ra), {}, "rs_ra", false) 
+  }
+  
+  return ET
+}
+
+function ETo_func(dataset, date, roi, force_calculate){
+  if((dataset === settings.datasets.xavier || dataset === settings.datasets.historical_xavier) && (force_calculate !== true)){
+    
+    var meteorologicalData = meteorological_variables_func(dataset, date)
+    var ETo  = meteorologicalData.select(['EVAPOTRANSPIRATION'], ["ETo"]).clip(roi);
+  
+  }else{
+    
+    // Table 1 (Walter et al, 2000)
+    var Cn = 900;
+    var Cd = 0.34;
+    var ETo = ee.Image(ET_func(dataset, date, roi, Cn, Cd)).rename("ETo")
+  
+    
+  }
+  
+  if(debug){
+    Map.addLayer(ETo, {min: 0, max: 1, palette: ETaPalette}, "ETo", false)
+  }
+  return ETo
+}
+
+function ETr_func(dataset, date, roi, force_calculate){
+
+    // Table 1 (Walter et al, 2000)
+    var Cn = 1600;
+    var Cd = 0.38;
+    var ETr = ee.Image(ET_func(dataset, date, roi, Cn, Cd)).rename("ETr")
+  
+  
+  
+  if(debug){
+    Map.addLayer(ETr, {min: 0, max: 1, palette: ETaPalette}, "ETr", false)
+  }
+  
+  return ETr
+}
+
+// Get dT Xavier
+function dTXavier_func(type, date){
+  var dTImage = null;
+
+  if(type === dTTypes.average){
+    var dTImage = ee.Image("users/areasirrigadas/ana/dT/dT_average")  ;
+  }else if(type === dTTypes.clearsky){
+    var dTImage = ee.Image("users/areasirrigadas/ana/dT/dT_clearsky") ; 
+  }else{
+    print("dTType not found!")
+  }
+  
+  
+  var doy = ee.Number.parse(date.format("D")).subtract(1)
+  doy     = ee.Number(ee.Algorithms.If(
+    doy.gt(364), 
+    364,
+    doy
+  ))
+  
+  var dT_doy = dTImage.select([doy],['dT'])
+  return dT_doy
+}
+
+// Calculate dT
+function dT_func(dataset, type, date, roi){
+  if(dataset === settings.datasets.xavier || dataset === settings.datasets.historical_xavier){
+    var dT = dTXavier_func(type, date)
+  }else{
+    var doy = ee.Number.parse(date.format("D"))
+    
+    var meteorologicalData = ee.Image(meteorological_variables_func(dataset, date)).clip(roi)
+    // DEM
+    var elev = ee.Image(elev_func()).clip(roi)
+    // Atmospheric Pressure
+    var pair = ee.Image(pair_func()).clip(roi)
+    
+    var Tmax = meteorologicalData.select(['TEMPERATURE_MAX'], ["Tmax"]);
+    var Tmin = meteorologicalData.select(['TEMPERATURE_MIN'], ["Tmin"]);
+    var u2 = meteorologicalData.select(['WIND_SPEED'], ["u2"]);
+    
+    var Rn = net_radiation_func({'doy': doy, "Tmin": Tmin, "Tmax": Tmax});
+    
+    // Virtual Air Temperature
+    var Tkv = ee.Image(0).expression(
+      '1.01 * (Tmax + Tmin) / 2',
+      {'Tmax': Tmax, 'Tmin': Tmin}
+    );
+    
+    // Air density
+    var Pa = ee.Image(0).expression(
+      '3.486 * (P / Tkv)', // Eq.A11 (Senay, 2018)
+      {'Tkv': Tkv, 'P':pair}
+    );
+    
+    // Aerodynamic Resistance to heat transfer
+    var rah = ee.Image(0).expression(
+      '208/u2', // Box 4 p.21 (Allen et al, 1998)
+      {'u2': u2}
+    )
+  
+    // Specific heat of air 
+    var Cp = ee.Image(1.013/1000).multiply(86400) // (Senay et al, 2018)
+  
+    /*  
+    Map.addLayer(Tmax, {min: 297.97, max: 305.67}, "Tmax", false)
+    Map.addLayer(Tmin, {min: 288.12, max: 293.63}, "Tmin", false)
+    Map.addLayer(u2, {min: 0.9, max: 3.3}, "u2", false)
+    Map.addLayer(elev, {min: 200, max: 1497}, "elev", false)
+    Map.addLayer(Rn, {min: 6.2367, max: 7.898}, "Rn", false)
+    Map.addLayer(pair, {min: 84.8119, max: 98.95}, "pair", false)
+    Map.addLayer(Tkv, {min: 295.829, max: 303.64}, "Tkv", false)
+    Map.addLayer(Pa, {min: 0.9921, max: 1.1422}, "Pa", false)
+    Map.addLayer(rah, {min: 81.94, max: 294.66}, "rah", false)
+    */
+  
+    var dT = ee.Image(0).expression(
+      '(Rn * rah)/(Pa * Cp)',
+      {'Rn': Rn, 'rah': rah, 'Pa': Pa, 'Cp': Cp}
+    ).rename("dT");
+  }
+   Export.image.toCloudStorage({
+  image: dT,
+  description: 'ANA_dT_SSEBOP',
+  bucket: 'et-brasil.appspot.com',
+  fileNamePrefix: 'ANA_dT_SSEBOP',
+  region: image.geometry(),
+  scale: 90,
+});
+  if(debug){
+    Map.addLayer(dT, {min: 3.359, max: 4.5507}, "dT", false);
+  }
+  
+  return ee.Image(dT.clip(roi)).set('system:time_start', date.millis())
+}
+
+function ETf_func(datasets, image, CFactor_STD){
+  var dT_dataset = datasets["dT_dataset"];
+  var dT_type = datasets["dT_type"];
+  var weather_dataset = datasets["weather_dataset"];
+  
+  var cloudMask = cloudUtils.cloudMask(image);
+  
+  image = image.updateMask(cloudMask.not());
+  
+  var meteorologicalData = meteorological_variables_func(weather_dataset, image.date());
+  
+  var cFactor = getCFactor(weather_dataset, image, CFactor_STD); //0.984
+
+  var Tmax  = meteorologicalData.select(['TEMPERATURE_MAX'], ["Tmax"]);
+  
+  var Ts = Ts_func(image);
+  
+  var Tc = ee.Image(0).expression(
+    'c * Tmax', // Eq.A.3 (Senay et al, 2018)
+    {'c': cFactor, 'Tmax': Tmax})
+    
+  var dT = dT_func(dT_dataset, dT_type, image.date(), image.geometry())
+  
+  var ETf = ee.Image(0).expression(
+    '1 - ((Ts  - Tc) / dT)', // Eq.A.2 (Senay et al, 2018)
+    {'Ts':Ts, 'Tc':Tc, 'dT':dT}
+  ).rename("ETf");
+  
+  var ndvi = NDVI_func(image)
+  
+  var ETf_adjust = ETf.where(
+    ndvi.lt(0),
+    ETf.multiply(0).add(1.05)
+  );
+    
+  ETf_adjust = ETf_adjust.clamp(0.0, 1.05); // Eq.2 (Senay et al, 2016)
+
+  if(debug){
+    Map.addLayer(Ts, {min: 3.359, max: 4.5507}, "Ts", false)
+    Map.addLayer(Tmax, {min: 3.359, max: 4.5507}, "Tmax", false)
+    Map.addLayer(Tc, {min: 0, max: 1}, "Tc", false)
+    Map.addLayer(ETf, {min: 0, max: 1, palette: ETaPalette}, "ETf", false)
+  }
+  
+  return ee.Image(ETf_adjust.clip(image.geometry()).copyProperties(image, ['system:index', 'system:time_start', 'system:time_end']))
+}
+
+function ETa_func(datasets, image, CFactor_STD){
+  var weather_dataset = datasets["weather_dataset"];
+  
+  var maskedImage = image.updateMask(cloudUtils.cloudMask(image).not());
+
+  var ETf = ETf_func(datasets, maskedImage, CFactor_STD);
+  
+  var ETr = ee.Image(ETr_func(weather_dataset, image.date(), image.geometry()));
+  
+  var ETa = ee.Image(0).expression(
+    'ETf * ETr', // Eq.A.1 (Senay et al, 2018)
+    {
+      'ETf': ETf, 
+      'ETr': ETr
+    }
+  )
+  .clip(image.geometry())
+  .rename("ETa");
+  Export.image.toCloudStorage({
+  image: ETa,
+  description: 'ANA_ETa_SSEBOP_novo_vai',
+  bucket: 'et-brasil.appspot.com',
+  fileNamePrefix: 'ANA_ETa_SSEBOP_vai',
+  region: image.geometry(),
+  scale: 90,
+});
+  if(debug){
+    Map.addLayer(ETa, {min: 0, max: 6, palette: ETaPalette}, "ETa", false);
+  }
+
+  return ee.Image(ETa.clip(image.geometry()).copyProperties(image, ['system:index', 'system:time_start', 'system:time_end']))
+}
+
+function getHistoricalCFactor(path, row, stddev){
+  
+  var historicalCFactorCol = cFactorCollection
+    .filterMetadata("PATH", "equals", path)
+    .filterMetadata("ROW", "equals", row)
+  
+  var historicalCFactorField    = cFactorFields[stddev];
+  
+  var historicalCFactorFeature = historicalCFactorCol.first()
+
+  var historicalCFactor = historicalCFactorFeature.get(historicalCFactorField)
+    
+  historicalCFactor = ee.Number.parse(ee.Algorithms.If(
+    ee.Algorithms.IsEqual(historicalCFactor, null), 
+    0, 
+    historicalCFactor)
+  )
+  
+  return ee.Algorithms.If(
+    historicalCFactorCol.size().gte(1), 
+    historicalCFactor,
+    null
+  );
+}
+
+// Tcorr Calculations function (to Landsat scene)
+function getSceneCFactor(dataset, image) {
+  image = ee.Image(image)
+  
+  var date_start = ee.Algorithms.Date(image.get("system:time_start"));
+  var year_start = ee.Number(date_start.get('year'));
+  var doy_start = ee.Number(date_start.getRelative('day', 'year')).add(1);
+  
+  var meteorologicalData = meteorological_variables_func(dataset, image.date())
+
+  var ndvi_image = NDVI_func(image);
+  var lst_image = Ts_func(image);
+    
+  // Compute tcorr
+  var tmax_image = meteorologicalData.select(['TEMPERATURE_MAX'], ["Tmax"]);
+  var tcorr_image = lst_image.divide(tmax_image).select([0], ['Tcorr']);
+
+
+  // Filter low LST values
+  tcorr_image = tcorr_image.updateMask(lst_image.gt(270));
+  
+  // Remove low NDVI areas
+  tcorr_image = tcorr_image.updateMask(ndvi_image.gt(0.75)); // 0.7 EUA and 0.75 Brazil
+
+  // Filter extreme Tdiff values
+  var tdiff_image = tmax_image.subtract(lst_image);
+  tcorr_image = tcorr_image.updateMask(tdiff_image.gt(0));
+  tcorr_image = tcorr_image.updateMask(tdiff_image.lt(15));
+
+  // Compute the zonal statistics
+  var stats_reducer = ee.Reducer.mean()
+    .combine(ee.Reducer.stdDev(), '', true)
+    .combine(ee.Reducer.count(), '', true);
+  
+  // Lines were commented out to optimize the SSEBop APP
+  // var stats_reducer = ee.Reducer.mean()
+  //   .combine(ee.Reducer.stdDev(), '', true)
+  //   .combine(ee.Reducer.median(), '', true)
+  //   .combine(ee.Reducer.min(), '', true)
+  //   .combine(ee.Reducer.max(), '', true)
+  //   .combine(ee.Reducer.percentile([5, 95]), '', true)
+  //   .combine(ee.Reducer.count(), '', true);
+  
+  var stats = tcorr_image.reduceRegion({
+    reducer: stats_reducer,
+    geometry: tcorr_image.geometry(),
+    scale: 30,
+    bestEffort: true,
+    maxPixels: 1e13,
+    // tileScale: 16,
+  });
+
+  // Add some image properties to the dictionary
+  stats = ee.Dictionary(stats.set('SCENE_ID', image.get('LANDSAT_SCENE_ID')));
+  stats = ee.Dictionary(stats.set('YEAR', year_start));
+  stats = ee.Dictionary(stats.set('DOY', doy_start));
+  return ee.Feature(null, stats);
+}
+
+// Tcorr Calculations function (to Landsat scene or historical of scene)
+function getCFactor(dataset, image, CFactor_STD){
+  var path = image.get("WRS_PATH")
+  var row = image.get("WRS_ROW")
+    
+  var historicalValue = getHistoricalCFactor(path, row, CFactor_STD);
+
+  var actualcFactorFeature = getSceneCFactor(dataset, image); 
+
+  var actualCount = actualcFactorFeature.get("Tcorr_count")
+  var actualMean = actualcFactorFeature.get("Tcorr_mean")
+  var actualStd = actualcFactorFeature.get("Tcorr_stdDev")
+
+  actualCount = ee.Number(ee.Algorithms.If(ee.Algorithms.IsEqual(actualCount, null), 0, actualCount))
+  actualMean = ee.Number(ee.Algorithms.If(ee.Algorithms.IsEqual(actualMean, null), 0, actualMean))
+  actualStd  = ee.Number(ee.Algorithms.If(ee.Algorithms.IsEqual(actualStd, null), 0, actualStd))
+
+  var actualValue =  actualMean.subtract(ee.Number(CFactor_STD).multiply(actualStd))
+  
+  var cFactor = ee.Number(
+    ee.Algorithms.If(
+      actualCount.gte(500),
+      actualValue,
+      ee.Algorithms.If(
+        ee.Algorithms.IsEqual(historicalValue, null),
+        0.975, // If it is not possible to calculate the c-factor of the scene and there is no historical reference
+        historicalValue
+      )
+    ))
+  
+  if(debug){
+    // print("Historical c-factor", historicalValue)
+    // print("Actual mean c-factor", actualMean)
+    // print("Actual std c-factor", actualStd)
+    // print("Actual c-factor", actualValue)
+    // print("Used c-factor", cFactor)
+  }
+  return cFactor
+}
+
+
+function kFactor_func(dataset, date, roi) {
+  var historicalKFactorCol = kFactorCollection
+    .filterBounds(roi.buffer(10).centroid(ee.ErrorMargin(1)))
+    
+  var historicalFeature = ee.Feature(historicalKFactorCol.first())
+    
+  var historicalFields = ee.Dictionary({
+    '1' : "JAN_p50", 
+    '2' : "FEV_p50",
+    '3' : "MAR_p50", 
+    '4' : "ABR_p50",
+    '5' : "MAI_p50",
+    '6' : "JUN_p50",
+    '7' : "JUL_p50",
+    '8' : "AGO_p50",
+    '9' : "SET_p50",
+    '10': "OUT_p50",
+    '11': "NOV_p50",
+    '12': "DEZ_p50"
+  })
+  
+  var historicalValue = historicalFeature.get(historicalFields.get(date.format("M")))
+  
+  var kFactor = ee.Number(ee.Algorithms.If(
+      historicalKFactorCol.size().gte(1),
+      historicalValue,
+1.15
+  ))
+
+  if(debug){
+    print("historical K-Factor:", historicalValue);
+  }
+  
+  return kFactor;
+}
+
+// TESTS
+if(debug){
+  // var imagePath = "LANDSAT/LC08/C01/T1_TOA/LC08_026034_20180416" // EUA
+  //var imagePath = "LANDSAT/LC08/C01/T1_TOA/LC08_223067_20190914" // Bananal
+    var imagePath ="LANDSAT/LT05/C01/T1_TOA/LT05_221071_20080816"
+  // var imagePath = "LANDSAT/LE07/C01/T1_TOA/LE07_220069_20160417" // oeste_bahia
+  // var imagePath = "LANDSAT/LC08/C01/T1_TOA/LC08_220068_20160104" // Imagem problemas
+  //var imagePath = "LANDSAT/LE07/C01/T1_TOA/LE07_220069_20160417" // oeste_bahia
+
+  var image = ee.Image(imagePath)
+  
+  // var point = ee.Geometry.Point([-47.47335, -16.1937055555556])
+  // var image = ee.Image(ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA")
+  //   .filterDate("2014-07-01", "2014-12-01")
+  //   .filterBounds(point)
+  //   .limit(1, "CLOUD_COVER")
+  //   .first())
+    
+  // print(image.date())
+  
+  // Map.centerObject(point)
+  // Map.addLayer(point)
+  
+  // Map.centerObject(image)
+    
+  var xavierETa = ee.Image(ETa_func({
+      "weather_dataset": settings.datasets.xavier,
+      "dT_dataset": settings.datasets.xavier,
+      "dT_type": dTTypes.clearsky,
+    },
+    image,
+    0))
+    .clip(image.geometry())
+    .set("system:footprint", image.geometry())
+    
+  var gldasETa = ee.Image(ETa_func({
+      "weather_dataset": settings.datasets.gldas,
+      "dT_dataset": settings.datasets.xavier,
+      "dT_type": dTTypes.clearsky,
+    },
+    image,
+    0))
+    .clip(image.geometry())
+    .set("system:footprint", image.geometry())
+
+}
+// END TESTS
+
+// DATASETS
+exports.datasets = settings.datasets;
+exports.dTTypes = dTTypes;
+exports.reference_crops = reference_crops;
+// END DATASETS
+
+exports.NDVI = NDVI_func;
+exports.MNDWI = MNDWI_func;
+exports.EVI2 = EVI2_func;
+exports.Ts  = Ts_func;
+exports.dT  = dT_func;
+exports.ETo = ETo_func;
+exports.ETr = ETr_func;
+exports.ETf  = ETf_func;
+exports.ETa = ETa_func;
+exports.getHistoricalCFactor = getHistoricalCFactor;
+exports.getSceneCFactor = getSceneCFactor;
+exports.cFactor = getCFactor;
+exports.meteorological_variables = meteorological_variables_func;
+
+exports.ETaPalette = ETaPalette
+exports.TsPalette = TsPalette
+exports.VIPalette = VIPalette
+
+
+/* ******** References ********
+
+Sobrino, J. A., Jimenez-Munoz, J. C., & Paolini, L. (2004). Land surface temperature retrieval from LANDSAT TM 5. 
+  Remote Sensing of environment, 90(4), 434-440.
+
+Sobrino, J. A., Caselles, V., & Becker, F. (1990). Significance of the remotely sensed thermal infrared measurements 
+  obtained over a citrus orchard. ISPRS Photogrammetric Engineering and Remote Sensing, 44, 343 – 354.
+  
+Allen, R. G., Tasumi, M., & Trezza, R. (2007). Satellite-based energy balance for mapping evapotranspiration with 
+internalized calibration (METRIC)—Model. Journal of irrigation and drainage engineering, 133(4), 380-394.
+
+Senay, G. B. (2018). Satellite Psychrometric Formulation of the Operational Simplified Surface Energy Balance (SSEBop) 
+  Model for Quantifying and Mapping Evapotranspiration.
+
+Walter, I. A., Allen, R. G., Elliott, R., Jensen, M. E., Itenfisu, D., Mecham, B., ... & Spofford, T. (2000). ASCE's standardized reference evapotranspiration equation. In Watershed management and operations management 2000 (pp. 1-11).
+*/

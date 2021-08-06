@@ -1,0 +1,45 @@
+//Transformação Brovey
+// Luis Sadeck 14/11/2017
+//Os valores de nível de cinza (NC) de cada banda da imagem multiespectral 
+//são divididos pela soma dos NC das n bandas utilizadas no processo.
+//O resultado é então multiplicado pelos NC da banda de melhor resolução espacial.
+//Este método tenta manter a integridade espectral de cada banda incorporando
+//o valor proporcional das bandas antes de serem alteradas pela fusão.
+//Fonte:
+//http://mtc-m16d.sid.inpe.br/col/sid.inpe.br/mtc-m19/2011/02.02.13.32/doc/publicacao.pdf
+
+var img = ee.Image('LANDSAT/LC08/C01/T1_RT_TOA/LC08_223061_20170706');
+
+var b4 = img.expression(
+    '(B4 /B4 + B5 + B6)*B8',
+    {
+        B4: img.select('B4'),   
+        B5: img.select('B5'),   
+        B6: img.select('B6'),
+        B8: img.select('B8')
+    });
+
+var b5 = img.expression(
+    '(B5 /B4 + B5 + B6)*B8',
+    {
+        B4: img.select('B4'),   
+        B5: img.select('B5'),   
+        B6: img.select('B6'),
+        B8: img.select('B8')
+    });
+var b6 = img.expression(
+    '(B6 /B4 + B5 + B6)*B8',
+    {
+        B4: img.select('B4'),   
+        B5: img.select('B5'),   
+        B6: img.select('B6'),
+        B8: img.select('B8')
+    });
+
+var img_fus = ee.Image.cat(b6,b5,b4);
+
+Map.centerObject(img);
+Map.addLayer(img_fus);
+
+// Este método de fusão modifica os valores de NC nas imagens resultantes, o
+//que pode causar problemas em estudos de comportamento espectral de alvos. 

@@ -1,0 +1,26 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var image = ee.Image("users/sadeckgeo/drone"),
+    geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-51.09819829681675, -6.540383359603767],
+          [-51.09819829681675, -6.548100423867108],
+          [-51.08965814331333, -6.548100423867108],
+          [-51.08965814331333, -6.540383359603767]]], null, false),
+    imageCollection = ee.ImageCollection("LANDSAT/LC08/C01/T1_TOA");
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var image = ee.Image("users/sadeckgeo/drone")
+var bg = image.lt(255)
+var remove = image.updateMask(bg);
+
+
+
+Map.addLayer(imageCollection.filterBounds(geometry))
+Map.addLayer(remove)
+Map.centerObject(image)

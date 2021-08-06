@@ -1,0 +1,11 @@
+var img = ee.Image('LANDSAT/LC08/C01/T1_RT_TOA/LC08_223061_20170706');
+
+var hsv = img.select(['B6', 'B5', 'B4']).rgbToHsv();
+
+var sharpened = ee.Image.cat([
+  hsv.select('hue'), hsv.select('saturation'), img.select('B8')
+]).hsvToRgb();
+
+Map.centerObject(img);
+Map.addLayer(sharpened);
+

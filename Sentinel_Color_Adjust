@@ -1,0 +1,112 @@
+//MATHEMATICAL OPERATORS USED ON RAW DATA==============================================================
+var converter = ee.Image(-1);
+var five = ee.Image(5.5);
+
+//FUNCTION TO ELIMINATE BORDER EFFECTS===================================================================
+var thin_ASC = function (image) {
+
+    var edgeSize = 5000;
+    
+    // y = a * x + b; b = 0; a = -0.2247366657 
+    var a = 0.2247366657;
+
+    // band names for displacement image algorithm
+    var bandNames = ['dx', 'dy'];
+
+    var mask = ee.Image(1).clip(image.geometry().buffer(-50));
+    
+    var dx1 = edgeSize;
+    var dy1 = a * dx1;
+
+    var disp1 = ee.Image([dx1, dy1]).rename(bandNames);
+    var disp1Mask = mask.displace(disp1);
+
+    var dx2 = -1 * edgeSize;
+    var dy2 = a * dx2;
+
+    var disp2 = ee.Image([dx2, dy2]).rename(bandNames);
+    var disp2Mask = mask.displace(disp2);
+
+    var maskOut = disp1Mask.multiply(disp2Mask);
+
+    return image.mask(maskOut);
+};
+
+var thin_DESC = function (image) {
+
+    var edgeSize = 5000;
+    
+    // y = a * x + b; b = 0; a = -0.2247366657 
+    var a = -0.2247366657;
+
+    // band names for displacement image algorithm
+    var bandNames = ['dx', 'dy'];
+
+    var mask = ee.Image(1).clip(image.geometry()
+    .buffer(-50)
+    );
+    
+    var dx1 = edgeSize;
+    var dy1 = a * dx1;
+
+    var disp1 = ee.Image([dx1, dy1]).rename(bandNames);
+    var disp1Mask = mask.displace(disp1);
+
+    var dx2 = -1 * edgeSize;
+    var dy2 = a * dx2;
+
+    var disp2 = ee.Image([dx2, dy2]).rename(bandNames);
+    var disp2Mask = mask.displace(disp2);
+
+    var maskOut = disp1Mask.multiply(disp2Mask);
+
+    return image.mask(maskOut);
+};
+
+//****Sentinel Data************************************************************************************
+
+var GRD_ASC = ee.ImageCollection('COPERNICUS/S1_GRD')
+          .filter(ee.Filter.eq('instrumentMode', 'IW'))
+          .filter(ee.Filter.eq('resolution', 'H'))
+          .filter(ee.Filter.eq('orbitProperties_pass', 'ASCENDING'))
+          .map(thin_ASC);
+
+var GRD_DESC = ee.ImageCollection('COPERNICUS/S1_GRD')
+          .filter(ee.Filter.eq('instrumentMode', 'IW'))
+          .filter(ee.Filter.eq('resolution', 'H'))
+          .filter(ee.Filter.eq('orbitProperties_pass', 'DESCENDING'))
+          .map(thin_DESC);
+
+var GRD = ee.ImageCollection(GRD_ASC.merge(GRD_DESC));
+
+
+var selectvv = function(image) {
+  return ee.Image(image).select('VV');
+};
+
+var selectvh = function(image) {
+  return ee.Image(image).select('VH');
+};
+
+var GRD_vv = GRD.filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VV'))
+                .map(selectvv);
+
+var GRD_vh = GRD.filter(ee.Filter.listContains('transmitterReceiverPolarisation', 'VH'))
+                .map(selectvh);
+
+var begin = ee.Date.fromYMD(2018, 9, 1);
+            var GRD_t1_vv = GRD_vv.filter(ee.Filter.date(begin, begin.advance(1, 'month') ))
+            .median()
+            .multiply(converter);
+            var GRD_t0_vh = GRD_vh.filter(ee.Filter.date(begin.advance(-12, 'month'), begin))
+            .median()
+            .multiply(converter)
+            .subtract(five);
+            var GRD_t0_vv = GRD_vv.filter(ee.Filter.date(begin.advance(-12, 'month'), begin))
+            .median()
+            // .min()
+            .multiply(converter);
+
+var img = ee.Image.rgb(GRD_t1_vv, GRD_t0_vh, GRD_t0_vv);
+ Map.addLayer(img, {min:6, max: 15}, 'TROPICAL AREA: thayRGB comp. @Imazon', true);
+ Map.addLayer(img, {min:6, max: 20}, 'SUBTROPICAL AREA: thayRGB comp. @Imazon', true);

@@ -1,0 +1,170 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageVisParam = {"opacity":1,"bands":["swir1","nir","red"],"min":0.011628108099102974,"max":0.5551908612251282,"gamma":1},
+    chandra = ee.ImageCollection("LANDSAT/MANGROVE_FORESTS"),
+    geometry = /* color: #d63000 */ee.Geometry.Polygon(
+        [[[-38.083174978392776, -4.301960196289422],
+          [-38.06989348124864, -4.493189284270906],
+          [-37.636824289666606, -4.479514456426912],
+          [-37.646179242848746, -4.292721714025056]]]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//Code  used  to generation of the indexs  
+//Name article : SouthAmerican  MangroveStatus:  AContinental  Analysis  3  from 2000 to 2017
+//Authors: Cesar Diniz, Luiz Cortinhas, Gilberto Nerino, Jonathan Rodrigues, Luís  Sadeck, João Siqueira, Marcos  Adami, Pedro Walfir
+//E-mail: cesar.diniz@solved.eco.br
+//Solved  –  Solutions  in  Geoinformation   
+//Visit https://www.solved.eco.br/
+//---------------------------------------------
+
+///Functions zone
+//---------------
+
+//Function to collect the images
+var getImageCollection = function (studyArea,startDate,endDate){
+  var ls;
+  var l5TOAs;
+  var l7TOAs;
+  var l8TOAs;
+
+  var sensorBandDictLandsatTOA = ee.Dictionary({
+                        L8 : ee.List([1,2,3,4,5,6,'BQA']),
+                        L7 : ee.List([0,1,2,3,4,7,'BQA']),
+                        L5 : ee.List([0,1,2,3,4,6,'BQA']),
+  });
+  
+  var bandNamesLandsatTOA = ee.List(['blue','green','red','nir','swir1','swir2','BQA']);
+
+  l5TOAs = ee.ImageCollection('LANDSAT/LT05/C01/T1_TOA')
+      .filterDate(startDate,endDate)
+      .filterBounds(studyArea)
+      .select(sensorBandDictLandsatTOA.get('L5'),bandNamesLandsatTOA);
+  
+  l8TOAs = ee.ImageCollection('LANDSAT/LC08/C01/T1_TOA')
+      .filterDate(startDate,endDate)
+      .filterBounds(studyArea)
+      .select(sensorBandDictLandsatTOA.get('L8'),bandNamesLandsatTOA);
+
+  l7TOAs = ee.ImageCollection('LANDSAT/LE07/C01/T1_TOA')
+      .filterDate(startDate,endDate)
+      .filterBounds(studyArea)
+      .select(sensorBandDictLandsatTOA.get('L7'),bandNamesLandsatTOA);
+  
+  ls = ee.ImageCollection(l5TOAs.merge(l7TOAs).merge(l8TOAs));
+
+  return ls;
+}
+
+//Function to calculate the indexes
+var createIndexs = function(image) {
+    var NDVI = null;
+    var EVI = null;
+    var NDWI = null;
+    var MNDWI = null;
+    var NDSI = null;
+    var MMRI = null;
+    var DiffNDVI_NDWI = null;
+    
+    //Calculation of the NDVI
+    NDVI = image.expression(
+      '((nir - red)/(nir + red))', {
+        'nir': image.select('nir'),
+        'red': image.select('red')
+    });
+    
+    //Calculation of the EVI
+    EVI = image.expression(
+      '(2.5 * ( ((nir - red)) / ((nir + (6 * red)) - (7.5 * blue) + 1 ) )) ', {
+        'blue' : image.select('blue'),
+        'red' : image.select('red'),
+        'nir' : image.select('nir')
+    });
+    
+    //Calculation of the NDWI
+    NDWI = image.expression(
+      '((green - nir)/ (green + nir))', {
+        'green' : image.select('green'),
+        'nir' : image.select('nir')
+    });
+    
+    //Calculation of the MNDWI
+    MNDWI = image.expression(
+      '((green - swir1)/ (green + swir1))', {
+        'green' : image.select('green'),
+        'swir1' : image.select('swir1')
+    });
+    
+    //Calculation of the NDSI
+    NDSI = image.expression(
+      '((swir1 - nir)/ (swir1 + nir))', {
+        'swir1' : image.select('swir1'),
+        'nir' : image.select('nir')
+    });
+    
+    //Calculation of the MMRI
+    MMRI = image.expression(
+      '(abs(mndwi) - abs(ndvi)) / (abs(mndwi) + abs(ndvi))', {
+        'mndwi' : MNDWI,
+        'ndvi' :  NDVI
+    });
+    
+    //Calculation of the DiffNDVI_NDWI
+    DiffNDVI_NDWI = image.expression(
+        'NDVI - NDWI',{
+        'NDVI' : NDVI,
+        'NDWI' : NDWI
+    });
+    
+    var maskedImage = image.addBands(image.metadata('system:time_start'))
+    .addBands(NDVI.rename('NDVI'))
+    .addBands(EVI.rename('EVI'))
+    .addBands(NDWI.rename('NDWI'))
+    .addBands(MNDWI.rename('MNDWI'))
+    .addBands(NDSI.rename('NDSI'))
+    .addBands(DiffNDVI_NDWI.rename('DiffNDVI_NDWI'))
+    .addBands(MMRI.rename('MMRI'));
+  
+  return  maskedImage;
+};
+//---------------
+
+//Function to select the band BQA with values free values of clouds and shadows
+var BQAFunction = function(img){
+  var bqa = img.select('BQA');
+  if(year > 2016){ 
+    img = img.mask(bqa.eq(2720));
+  }else{
+    img = img.mask(bqa.eq(672));
+  }
+  return img;
+}
+
+//Main Code zone
+//---------------
+//Declaration of start variables
+
+var studyArea = geometry; 
+var year = 2017;
+var startDate = year+'-01-01';
+var endDate   = year+'-12-31';
+
+//Collect a ImageCollection filtered in a time range and in the region of study interest
+var imgColl = getImageCollection(studyArea,startDate,endDate).map(createIndexs);
+
+//Calculate the new indexes to each image of the 'imgColl'
+var mosaic = imgColl.map(BQAFunction).median().clip(geometry);
+
+//Select bands of the mosaic
+var bands = ['blue','green','red','nir','swir1','swir2','NDVI','NDWI','MNDWI','DiffNDVI_NDWI','MMRI'];
+mosaic = mosaic.select(bands); 
+
+//Display in map the images and data
+var paleta = ['008100', '389D2E', '76B956', 'A7D17A','D0E899', 'F8F4BD', 'F0D9CA', 'E2BFD1', 'D2A5D8', 'AC93E2', '7C85EF', '347AF9', '006CFD', '0057E0', '4238BA', '5614BC'];
+
+Map.centerObject(geometry);
+Map.addLayer(mosaic,imageVisParam,'543',true);
+Map.addLayer(mosaic.select('NDVI'),{},'NDVI',true);
+Map.addLayer(mosaic.select('MNDWI'),{},'MNDWI',true);
+Map.addLayer(mosaic.select('MMRI'),{min:-1,max:1, palette: paleta},'MMRI',true);
+
+
+
+

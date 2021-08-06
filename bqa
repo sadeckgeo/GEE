@@ -1,0 +1,27 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-47.17046903348314, -3.039129677603962],
+          [-47.17046903348314, -4.3218519625480845],
+          [-46.19268583035814, -4.3218519625480845],
+          [-46.19268583035814, -3.039129677603962]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var BQA = function(image){
+  image = image.updateMask(image.select('BQA').eq(2720));
+  return image;
+}
+
+var l8 = ee.ImageCollection('LANDSAT/LC08/C01/T1_TOA')
+  .filterDate('2018-01-01','2019-12-30')
+  .filterBounds(geometry)
+  .map(BQA)
+  .median();
+
+Map.addLayer(l8,{bands:['B6','B5','B4']},'l8_s_nuvem')

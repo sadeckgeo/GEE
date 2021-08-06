@@ -1,0 +1,40 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var area = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-50.42502957534122, -6.8495836451099334],
+          [-50.42502957534122, -7.165806707270994],
+          [-50.05149441909122, -7.165806707270994],
+          [-50.05149441909122, -6.8495836451099334]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+
+var roi = area
+Map.addLayer(roi,{})
+Map.centerObject(roi,7);
+
+//Dates of Interest
+var start = ee.Date("2014-10-01");
+var finish = ee.Date("2018-05-01");
+
+///--------------------- Landsat Collection ---------------------------------------///
+var landsat = ee.ImageCollection('LANDSAT/LC08/C01/T1_TOA')
+.filterDate(start, finish)
+.filterBounds(roi);
+
+// Year-Month-Day Extract function
+function ymdList(imgcol){
+    var iter_func = function(image, newlist){
+        var date = ee.Number.parse(image.date().format("YYYYMMdd"));
+        newlist = ee.List(newlist);
+        return ee.List(newlist.add(date).sort())
+    };
+    return imgcol.iterate(iter_func, ee.List([]));
+}
+print(ymdList(landsat))
+

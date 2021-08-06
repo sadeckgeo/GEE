@@ -1,0 +1,20 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #d63000 */ee.Geometry.Point([-49.06564984155864, -11.739683658119725]),
+    imageVisParam = {"opacity":1,"bands":["B11","B8A","B5"],"min":170,"max":5786,"gamma":0.989};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var imageCollection = ee.ImageCollection("COPERNICUS/S2")
+  .filterBounds(geometry)
+  .filterDate('2019-01-01', '2019-06-21')
+  .first()
+  .int16();
+  
+Export.image.toDrive({
+  image:imageCollection,
+  description:'S2_20190202_81',
+  folder:'GEE',
+  scale:20,
+  maxPixels:1e12,
+  });
+
+Map.centerObject(imageCollection, 9);
+Map.addLayer(imageCollection,imageVisParam,'Sentinel 2');

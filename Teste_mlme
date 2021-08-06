@@ -1,0 +1,101 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageVisParam = {"opacity":1,"bands":["B6","B5","B4"],"min":0.03504031524062157,"max":0.47748273611068726,"gamma":1};
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var l8 = ee.Image ('LANDSAT/LC08/C01/T1_TOA/LC08_223062_20130727');
+
+var B5 = l8.select('B5')
+var B4 = l8.select('B4')
+var B6 = l8.select('B6')
+
+///////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+//Valores de pixel puro de veg
+var B6v = 0.1499725580215454
+var B5v = 0.36857497692108154
+var B4v = 0.0434991680085659
+
+//Valores de pixel puro de solo
+var B6s = 0.561656676530838
+var B5s = 0.29534685611724854
+var B4s = 0.1526528298854828
+
+//Valores de pixel puro de agua
+var B6a = 0.06261791586875916
+var B5a = 0.036261222809553146
+var B4a = 0.10302225083112717
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+//Proporção de vegetação 
+var veg = l8.expression(
+  'B5v / (B6v + B5v + B4v)',
+    {
+      'B6v' : B6v,
+      'B5v' : B5v,
+      'B4v' : B4v
+    });
+print (veg)
+
+//Proporção de Solo 
+var solo = l8.expression(
+  'B5s / (B6s + B5s + B4s)',
+    {
+      'B6s' : B6s,
+      'B5s' : B5s,
+      'B4s' : B4s
+    });
+print (solo)
+
+//Proporção de agua
+var agua = l8.expression(
+  'B5a / (B6a + B5a + B4a)',
+    {
+      'B6a' : B6a,
+      'B5a' : B5a,
+      'B4a' : B4a
+    });
+print (agua)
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+// a*vegi + b*soloi + c*sombrai
+var fraveg = l8.expression(
+  'veg * B5',
+    {
+      //'B6' : B6,
+      'B5' : B5,
+      //'B4' : B4,
+      'veg': veg,
+      //'solo' : solo,
+      //'agua' : agua
+    });
+
+// a*vegi + b*soloi + c*sombrai
+var frasolo = l8.expression(
+  'solo * B6',
+    {
+      'B6' : B6,
+      //'B5' : B5,
+      //'B4' : B4,
+      //'veg': veg,
+      'solo' : solo,
+      //'agua' : agua
+    });
+
+// a*vegi + b*soloi + c*sombrai
+var fraagua = l8.expression(
+  'agua * B4',
+    {
+      //'B6' : B6,
+      //'B5' : B5,
+      'B4' : B4,
+      //'veg': veg,
+      //'solo' : solo,
+      'agua' : agua
+    });
+
+Map.addLayer(fraveg, {}, 'Fração Veg')
+Map.addLayer(frasolo, {}, 'Fração Solo')
+Map.addLayer(fraagua, {}, 'Fração Agua')
+
+Map.addLayer(l8,imageVisParam,'L8');

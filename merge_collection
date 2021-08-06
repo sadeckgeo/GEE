@@ -1,0 +1,11 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var imageCollection = ee.ImageCollection("LANDSAT/LC08/C01/T1_RT_TOA"),
+    imageCollection2 = ee.ImageCollection("COPERNICUS/S2"),
+    geometry = /* color: #d63000 */ee.Geometry.Point([-48.515625, -1.4939713066293112]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var fil = ee.ImageCollection(imageCollection)
+    .merge(imageCollection2)
+    .filterDate('2017-10-01', '2017-10-24')
+    .filterBounds(geometry);
+
+Map.addLayer(fil);

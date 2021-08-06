@@ -1,0 +1,26 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var geometry = /* color: #d63000 */ee.Geometry.Point([-48.55682373046875, -0.7607379547206014]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+// img = ee.ImageCollection('LANDSAT/LC08/C01/T1_RT_TOA')
+  //  .filterBounds(geometry)
+    //.filterMetadata('CLOUD_COVER', 'less_than', 3);
+    
+var img = ee.Image('LANDSAT/LC08/C01/T1_RT_TOA/LC08_223061_20170706');
+
+var NDWI_Veg = img.expression(
+    '(nir - swir) / (nir + swir )',
+    {
+        swir: img.select('B6'),    
+        nir: img.select('B5'),
+    });
+    
+var NDWI_h2o = img.expression(
+    '(green - nir) / (green + nir )',
+    {
+        green: img.select('B3'),    
+        nir: img.select('B5'),
+    });
+    
+Map.addLayer(img, {bands: 'B6,B5,B4'});
+Map.addLayer(NDWI_Veg);
+Map.addLayer(NDWI_h2o);

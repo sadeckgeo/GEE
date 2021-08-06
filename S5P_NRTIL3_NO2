@@ -1,0 +1,11 @@
+var collection = ee.ImageCollection ('COPERNICUS/S5P/NRTI/L3_NO2')
+  .select ('NO2_column_number_density')
+  .filterDate ('2020-03-20', '2020-04-10');
+
+var band_viz = {
+  min: 0.0,
+  max: 0.0002,
+  palette: ['black', 'blue', 'cyan', 'green', 'yellow', 'orange', 'red']
+}
+
+Map.addLayer (collection.mean (), band_viz, 'S5P N02');

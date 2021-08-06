@@ -1,0 +1,25 @@
+var point = ee.Geometry.Point( [-109.05, 37.0])
+var newFil = point.buffer(300)
+
+
+// Create a Landsat 7 composite for Spring of 2000, and filter by
+// the bounds of the FeatureCollection
+var collection = ee.ImageCollection('LANDSAT/LE07/C01/T1')
+    .filterDate('2000-04-01', '2000-07-01')
+    .filterBounds(newFil);
+
+
+var clipper = function(image) {
+  return image.clip(newFil.bounds());
+};
+
+var boundary = ee.Geometry.Polygon(newFil.bounds().getInfo().coordinates[0]).toGeoJSONString();
+
+var img = collection.map(clipper).median();
+// Need download url for each image in collection?
+var path = img.getDownloadURL({
+  'scale': 30,
+  'crs': 'EPSG:4326',
+  'region': boundary
+});
+print(path);

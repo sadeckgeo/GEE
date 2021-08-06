@@ -1,0 +1,44 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var img = ee.ImageCollection("COPERNICUS/S2_SR"),
+    geometry = 
+    /* color: #d63000 */
+    /* shown: false */
+    /* displayProperties: [
+      {
+        "type": "rectangle"
+      }
+    ] */
+    ee.Geometry.Polygon(
+        [[[-51.703598279625226, -22.682556800699647],
+          [-51.703598279625226, -23.362534841711014],
+          [-50.500595349937726, -23.362534841711014],
+          [-50.500595349937726, -22.682556800699647]]], null, false);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+var redge = function (image)
+{
+var edge = image.expression(
+    '740 * ((((B4 + B7)/2) - B5)/(B6 - B5))',
+    {
+        B4: image.select('B4'),
+        B7: image.select('B7'), 
+        B5: image.select('B5'),    
+        B6: image.select('B6')    
+    });
+image = image.addBands(edge.rename('edgeall'));
+
+return  image;
+}
+
+var palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
+               '74A901', '66A000', '529400', '3E8601', '207401', '056201',
+               '004C00', '023B01', '012E01', '011D01', '011301'];
+               
+var img = ee.ImageCollection("COPERNICUS/S2_SR")
+.filterBounds(geometry)
+.filterMetadata('CLOUD_COVERAGE_ASSESSMENT', 'less_than', 20)
+.filterDate('2018-01-01', '2018-12-31')
+.select(['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B9', 'B11', 'B12'])
+.map(redge)
+
+Map.addLayer(img.median(), {min: 0, max: 1,bands:['edgeall'] ,palette: palette}, 'edgeall');
+Map.addLayer(img.median(), {bands:'B4,B3,B2'}, 'Color')

@@ -1,0 +1,9 @@
+var image = ee.ImageCollection ('LANDSAT/LC08/C01/T1_RT_TOA')
+    .median();
+
+var fc = ee.FeatureCollection('ft:1wuLqVY9Jen2Rp8UG5RxUPezV0PYJNPkXAcpuFIwQ');
+
+var clip = image.clipToCollection (fc);
+
+Map.addLayer(clip, {bands:'B6,B5,B4'}, 'OLI');
+//Map.addLayer(fc);

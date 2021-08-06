@@ -1,0 +1,23 @@
+/**** Start of imports. If edited, may not auto-convert in the playground. ****/
+var l5 = ee.ImageCollection("LANDSAT/LT05/C01/T1_SR"),
+    l7 = ee.ImageCollection("LANDSAT/LE07/C01/T1_SR"),
+    l8 = ee.ImageCollection("LANDSAT/LC08/C01/T1_SR"),
+    geometry = /* color: #d63000 */ee.Geometry.Point([-48.167566397674626, -2.417753270186235]);
+/***** End of imports. If edited, may not auto-convert in the playground. *****/
+//merge landsat 5, 7 e 8
+var bname = ['blue', 'green', 'red', 'nir', 'swir1', 'swir2']
+var bl5 = ['B1', 'B2', 'B3', 'B4', 'B5', 'B7']
+var bl7 = ['B1', 'B2', 'B3', 'B4', 'B5', 'B7']
+var bl8 = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7']
+
+var rename_bands = function (img, input) {
+  return img.select(input, bname);
+};
+
+var l5n = rename_bands(l5, bl5);
+var l7n = rename_bands(l7, bl7);
+var l8n = rename_bands(l8, bl8);
+
+var lsat = l5n.merge(l7n).merge(l8n).filterBounds(geometry)
+
+Map.addLayer(lsat)
